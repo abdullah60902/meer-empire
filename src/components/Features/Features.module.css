@@ -1,0 +1,173 @@
+/* =============================================
+   MEER EMPIRE – Premium Features Section
+   Clean modern line-icon aesthetics
+   ============================================= */
+
+.section {
+  padding: 7rem 0;
+  background: var(--navy-deep);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background image & gradient blend */
+.bgWrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.bgImg {
+  position: absolute;
+  inset: -5%;
+  background-image: url('https://images.unsplash.com/photo-1556906781-9a412961c28c?w=1600&q=85');
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.25) saturate(0.6);
+  transform: scale(1.03);
+}
+.bgOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    var(--navy-deep) 0%,
+    rgba(4, 13, 27, 0.75) 30%,
+    rgba(4, 13, 27, 0.75) 70%,
+    var(--navy-deep) 100%
+  );
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 4rem;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.7s var(--ease-out);
+}
+.header.visible { opacity: 1; transform: translateY(0); }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--silver-dark);
+  margin-bottom: 1rem;
+}
+.eyebrow::before, .eyebrow::after {
+  content: '';
+  width: 24px; height: 1px;
+  background: var(--silver-dark);
+  opacity: 0.6;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  line-height: 1;
+}
+.title span { color: var(--silver-light); }
+
+.desc {
+  color: rgba(255,255,255,0.55);
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+/* Card */
+.card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 2.25rem 1.75rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s var(--ease-out) var(--delay),
+              transform 0.6s var(--ease-out) var(--delay),
+              background 0.3s var(--ease),
+              border-color 0.3s var(--ease),
+              box-shadow 0.3s var(--ease);
+}
+.card.visible { opacity: 1; transform: translateY(0); }
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Icon box */
+.iconBox {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 1.5rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--silver-light);
+  transition: all 0.3s var(--ease);
+}
+
+.card:hover .iconBox {
+  background: var(--navy-mid);
+  border-color: var(--silver-light);
+  color: #fff;
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(184,197,208,0.2);
+}
+
+/* Title — clean body font, readable, not overly bold */
+.cardTitle {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.6rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.cardDesc {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+/* Responsive */
+@media (max-width: 1100px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px)  { .grid { grid-template-columns: 1fr; } .container { padding: 0 1.25rem; } }

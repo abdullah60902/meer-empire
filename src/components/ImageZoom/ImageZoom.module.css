@@ -1,0 +1,50 @@
+.container {
+  position: relative;
+  aspect-ratio: 4/3;
+  background: var(--bg-section);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  cursor: crosshair;
+  user-select: none;
+}
+
+.mainImage {
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+/* Magnifier lens circle */
+.lens {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(11, 35, 69, 0.3),
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(255,255,255,0.2);
+  background-repeat: no-repeat;
+}
+
+/* "Hover to zoom" hint badge */
+.hint {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.4rem 0.85rem;
+  border-radius: 99px;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  opacity: 0.85;
+}

@@ -1,0 +1,241 @@
+/* =============================================
+   MEER EMPIRE – Heavy Brand Product Card
+   Clean, editorial, performance-brand style
+   ============================================= */
+
+.card {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(11,35,69,0.25);
+}
+
+/* ---- Image ---- */
+.imgWrap {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--bg-section);
+  overflow: hidden;
+}
+.img {
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.card:hover .img { transform: scale(1.07); }
+
+/* ---- Badges ---- */
+.badges {
+  position: absolute;
+  top: 1rem; left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  z-index: 3;
+}
+.badgeNew {
+  display: inline-block;
+  padding: 0.22rem 0.7rem;
+  background: var(--navy);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.badgeSale {
+  display: inline-block;
+  padding: 0.22rem 0.7rem;
+  background: var(--silver-light);
+  color: var(--navy);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.badgeComingSoon {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+
+/* ---- Quick Actions ---- */
+.actions {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  z-index: 3;
+  opacity: 0;
+  transform: translateX(8px);
+  transition: all 0.3s var(--ease);
+}
+.card:hover .actions { opacity: 1; transform: translateX(0); }
+
+.actionBtn {
+  width: 38px; height: 38px;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(11,35,69,0.08);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+[data-theme="dark"] .actionBtn {
+  background: rgba(12,24,40,0.95);
+  border-color: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+}
+.actionBtn:hover {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+.wishlisted { color: #e74c3c !important; }
+.actionBtn.wishlisted:hover { background: #e74c3c !important; border-color: #e74c3c !important; }
+
+/* ---- Add to Cart bar ---- */
+.addBar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: var(--navy);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0.8rem;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  transform: translateY(100%);
+  transition: transform 0.3s var(--ease);
+  z-index: 4;
+}
+.card:hover .addBar { transform: translateY(0); }
+.addBar:hover { background: var(--navy-mid); }
+.addBar:disabled { background: var(--silver-dark); cursor: not-allowed; }
+
+/* ---- Content ---- */
+.content {
+  padding: 1.25rem 1.25rem 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--silver-dark);
+  margin-bottom: 0.4rem;
+}
+
+.name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+  margin-bottom: 0.75rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.stars { font-size: 0.7rem; letter-spacing: -0.06em; }
+.ratingNum { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); }
+.reviews { font-size: 0.72rem; color: var(--text-muted); }
+
+.stockBadge {
+  margin-left: auto;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.inStock   { background: rgba(39,174,96,0.08); color: #27ae60; }
+.lowStock  { background: rgba(243,156,18,0.10); color: #e67e22; }
+.outOfStock{ background: rgba(231,76,60,0.08); color: #e74c3c; }
+
+/* ---- Footer ---- */
+.footer {
+  margin-top: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.priceWrap { display: flex; flex-direction: column; }
+.price {
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--navy);
+  line-height: 1;
+}
+[data-theme="dark"] .price { color: var(--silver-light); }
+.oldPrice {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: line-through;
+  margin-top: 0.15rem;
+}
+
+.viewBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--navy);
+  text-decoration: none;
+  border-bottom: 1px solid var(--navy);
+  padding-bottom: 1px;
+  transition: all 0.2s var(--ease);
+  white-space: nowrap;
+}
+.viewBtn:hover { color: var(--navy-mid); gap: 0.6rem; }
+[data-theme="dark"] .viewBtn { color: var(--silver-light); border-bottom-color: var(--silver-light); }

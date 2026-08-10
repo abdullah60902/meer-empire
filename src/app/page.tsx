@@ -1,69 +1,147 @@
-import Image from "next/image";
+'use client';
+import Hero from '@/components/Hero/Hero';
+import Categories from '@/components/Categories/Categories';
+import Features from '@/components/Features/Features';
+import WhyChooseUs from '@/components/WhyChooseUs/WhyChooseUs';
+import Reviews from '@/components/Reviews/Reviews';
+import ProductCard from '@/components/ProductCard/ProductCard';
+import { products } from '@/data/products';
+import Link from 'next/link';
+import { useEffect, useRef } from 'react';
+
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.cssText = `opacity:0;transform:translateY(36px);transition:opacity 0.75s ${delay}s ease,transform 0.75s ${delay}s ease`;
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { el.style.cssText = 'opacity:1;transform:none'; obs.disconnect(); }
+    }, { threshold: 0.06 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [delay]);
+  return <div ref={ref}>{children}</div>;
+}
+
+/* Rolling ticker */
+const TICKER_ITEMS = [
+  'IMPORTED BRANDED SHOES', 'CASH ON DELIVERY', 'FAST SHIPPING', 
+  'PREMIUM QUALITY', '200+ PRODUCTS', '5000+ CUSTOMERS',
+  'MEER EMPIRE', 'WALK WITH CONFIDENCE',
+];
+
+function Ticker() {
+  const items = [...TICKER_ITEMS, ...TICKER_ITEMS];
+  return (
+    <div style={{ overflow: 'hidden', background: '#0B2345', padding: '0.9rem 0', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ display: 'inline-flex', animation: 'marqueeLeft 18s linear infinite', whiteSpace: 'nowrap' }}>
+        {items.map((item, i) => (
+          <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '2rem', padding: '0 2rem' }}>
+            <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '1rem', letterSpacing: '0.2em', color: 'rgba(255,255,255,0.7)' }}>{item}</span>
+            <span style={{ width: 4, height: 4, background: 'rgba(184,197,208,0.5)', borderRadius: '50%', flexShrink: 0 }} />
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
+  const featuredProducts = products.filter((p: any) => p.isBestSeller).slice(0, 4);
+  const newArrivals = products.filter((p: any) => p.isNew).slice(0, 4);
+
+  const sectionStyle = (dark = false): React.CSSProperties => ({
+    padding: '7rem 0',
+    background: dark ? 'var(--navy-deep)' : 'var(--bg-body)',
+  });
+
+  const gridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    gap: '2rem',
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      <Hero />
+
+      {/* Rolling Ticker */}
+      <Ticker />
+
+      {/* Categories */}
+      <Categories />
+
+      {/* ── Best Sellers ── */}
+      <section style={sectionStyle()}>
+        <div className="container">
+          <Reveal>
+            <div style={{ marginBottom: '3.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--silver-dark)', marginBottom: '1rem' }}>
+                <span style={{ width: 28, height: 1, background: 'var(--silver-dark)', display: 'inline-block' }} />
+                Top Rated
+              </div>
+              <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(3rem, 6vw, 5.5rem)', fontWeight: 400, lineHeight: 0.95, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '1rem' }}>
+                BEST<br /><span style={{ color: 'var(--navy)' }}>SELLERS</span>
+              </h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: 480 }}>Our most popular imported shoes, chosen by thousands of customers nationwide.</p>
+            </div>
+          </Reveal>
+
+          <div style={gridStyle}>
+            {featuredProducts.map((p: any, i: number) => (
+              <Reveal key={p.id} delay={i * 0.08}>
+                <ProductCard product={p} />
+              </Reveal>
+            ))}
+          </div>
+
+          <Reveal delay={0.3}>
+            <div style={{ marginTop: '3rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+              <Link href="/shop" style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.75rem',
+                fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.05rem', letterSpacing: '0.12em', textTransform: 'uppercase',
+                padding: '1rem 2.5rem',
+                background: 'var(--navy)', color: '#fff',
+                clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
+                transition: 'all 0.22s ease',
+              }}>
+                View All Products →
+              </Link>
+            </div>
+          </Reveal>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Features (dark) */}
+      <Features />
+
+      {/* ── New Arrivals ── */}
+      <section style={{ padding: '7rem 0', background: 'var(--bg-section)' }}>
+        <div className="container">
+          <Reveal>
+            <div style={{ marginBottom: '3.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--silver-dark)', marginBottom: '1rem' }}>
+                <span style={{ width: 28, height: 1, background: 'var(--silver-dark)', display: 'inline-block' }} />
+                Just In
+              </div>
+              <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(3rem, 6vw, 5.5rem)', fontWeight: 400, lineHeight: 0.95, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
+                NEW<br /><span style={{ WebkitTextStroke: '1px var(--navy)', color: 'transparent' }}>ARRIVALS</span>
+              </h2>
+            </div>
+          </Reveal>
+          <div style={gridStyle}>
+            {newArrivals.map((p: any, i: number) => (
+              <Reveal key={p.id} delay={i * 0.08}>
+                <ProductCard product={p} />
+              </Reveal>
+            ))}
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <WhyChooseUs />
+      <Reviews />
+    </>
   );
 }

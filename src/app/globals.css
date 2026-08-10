@@ -1,26 +1,330 @@
-@import "tailwindcss";
+/* =============================================
+   MEER EMPIRE – Heavy Brand Design System
+   Inspired by: Nike, Adidas, Balenciaga
+   ============================================= */
 
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ---- Design Tokens ---- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand */
+  --navy:         #0B2345;
+  --navy-deep:    #040D1B;
+  --navy-mid:     #0E2A50;
+  --silver:       #B8C5D0;
+  --silver-light: #D8E2EB;
+  --silver-dark:  #7A8FA0;
+  --white:        #FFFFFF;
+  --off-white:    #F5F7FA;
+
+  /* Primary = Navy */
+  --primary:        #0B2345;
+  --primary-light:  #1a3a6e;
+  --primary-dark:   #040D1B;
+  --accent-silver:  #B8C5D0;
+  --accent-silver-2:#E2EBF4;
+  --accent-silver-3:#7A8FA0;
+
+  /* Backgrounds */
+  --bg-body:    #F4F6FA;
+  --bg-card:    #FFFFFF;
+  --bg-section: #EAEDF3;
+  --bg-dark:    #080F1C;
+  --bg-glass:   rgba(255,255,255,0.80);
+
+  /* Text */
+  --text-primary:   #07111E;
+  --text-secondary: #3D5068;
+  --text-muted:     #7A8FA0;
+
+  /* UI */
+  --border:     rgba(11,35,69,0.08);
+  --border-2:   rgba(11,35,69,0.04);
+  --shadow-xs:  0 1px 4px rgba(4,13,27,0.08);
+  --shadow-sm:  0 4px 16px rgba(4,13,27,0.10);
+  --shadow-md:  0 10px 40px rgba(4,13,27,0.14);
+  --shadow-lg:  0 24px 64px rgba(4,13,27,0.20);
+  --shadow-xl:  0 40px 100px rgba(4,13,27,0.28);
+  --shadow-silver: 0 8px 30px rgba(184,197,208,0.3);
+
+  --radius-xs:  4px;
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  20px;
+  --radius-xl:  28px;
+  --radius-2xl: 40px;
+
+  /* Typography — Heavy Brand Style */
+  --font-display: 'Bebas Neue', 'Impact', 'Arial Black', sans-serif;
+  --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --ease:        cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:    cubic-bezier(0, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition:  all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+[data-theme="dark"] {
+  --bg-body:        #070D19;
+  --bg-card:        #0C1828;
+  --bg-section:     #091220;
+  --bg-glass:       rgba(8,15,28,0.92);
+  --border:         rgba(255,255,255,0.06);
+  --border-2:       rgba(255,255,255,0.03);
+  --shadow-sm:      0 4px 16px rgba(0,0,0,0.40);
+  --shadow-md:      0 10px 40px rgba(0,0,0,0.50);
+  --shadow-lg:      0 24px 64px rgba(0,0,0,0.60);
+  --shadow-xl:      0 40px 100px rgba(0,0,0,0.70);
+  --text-primary:   #E8F0F8;
+  --text-secondary: #7A9AB8;
+  --text-muted:     #4A6278;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* ---- Reset ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  background: var(--bg-body);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  transition: background 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+img { max-width: 100%; display: block; }
+a  { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+input, textarea, select { font-family: inherit; }
+
+/* ---- Layout ---- */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2.5rem;
+}
+@media (max-width: 768px) { .container { padding: 0 1.25rem; } }
+
+/* ---- Section Header ---- */
+.section-header {
+  margin-bottom: 4rem;
+}
+.section-header.center { text-align: center; }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--silver-dark);
+  margin-bottom: 1rem;
+}
+.eyebrow::before {
+  content: '';
+  width: 28px; height: 1px;
+  background: var(--silver-dark);
+}
+
+/* Big bold brand-style titles */
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-weight: 400; /* Bebas Neue is inherently bold */
+  color: var(--text-primary);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  margin-bottom: 1.25rem;
+  text-transform: uppercase;
+}
+.section-title .gold   { color: var(--accent-silver); }
+.section-title .silver { color: var(--silver); }
+.section-title .blue   { color: var(--primary); }
+[data-theme="dark"] .section-title { color: #E8F0F8; }
+[data-theme="dark"] .section-title .blue { color: var(--silver-light); }
+
+/* ---- Buttons ---- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.1rem 2.5rem;
+  background: var(--navy);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 2px solid var(--navy);
+  cursor: pointer;
+  transition: all 0.22s var(--ease);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+.btn-primary:hover {
+  background: var(--navy-mid);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(11,35,69,0.35);
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.1rem 2.5rem;
+  background: transparent;
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 2px solid var(--navy);
+  cursor: pointer;
+  transition: all 0.22s var(--ease);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+.btn-outline:hover {
+  background: var(--navy);
+  color: #fff;
+  transform: translateY(-2px);
+}
+[data-theme="dark"] .btn-outline { color: #fff; border-color: rgba(255,255,255,0.3); }
+[data-theme="dark"] .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+
+/* ---- Card Base ---- */
+.card-base {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+.card-base:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+
+/* ---- Glass ---- */
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid rgba(255,255,255,0.20);
+}
+[data-theme="dark"] .glass { border-color: rgba(255,255,255,0.07); }
+
+/* ---- AOS ---- */
+.aos {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+.aos.visible { opacity: 1; transform: translateY(0); }
+
+/* ---- Premium Divider ---- */
+.divider-ornament {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 3rem auto;
+  max-width: 300px;
+}
+.divider-ornament::before, .divider-ornament::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--accent-silver));
+}
+.divider-ornament::after {
+  background: linear-gradient(to left, transparent, var(--accent-silver));
+}
+.divider-ornament span { color: var(--accent-silver); font-size: 1rem; }
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-section); }
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 99px;
+}
+
+/* ---- Selection ---- */
+::selection { background: rgba(11,35,69,0.15); color: var(--primary); }
+[data-theme="dark"] ::selection { color: var(--accent-silver-2); }
+
+/* ---- Focus ---- */
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+
+/* ---- Keyframes ---- */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-16px) rotate(2deg); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes marqueeLeft {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes shimmerSilver {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+@keyframes skeletonShimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.05); opacity: 0.8; }
+}
+
+/* ---- Marquee Ticker ---- */
+.ticker {
+  overflow: hidden;
+  white-space: nowrap;
+  background: var(--navy);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.15em;
+  padding: 0.65rem 0;
+}
+.ticker-inner {
+  display: inline-block;
+  animation: marqueeLeft 20s linear infinite;
+}
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 3rem;
+}
+.ticker-dot {
+  width: 4px; height: 4px;
+  background: var(--silver);
+  border-radius: 50%;
+  flex-shrink: 0;
 }

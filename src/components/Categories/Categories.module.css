@@ -1,0 +1,175 @@
+/* =============================================
+   MEER EMPIRE – Heavy Brand Categories
+   Editorial masonry / magazine grid
+   ============================================= */
+
+.section {
+  padding: 6rem 0 0;
+  background: var(--bg-body);
+  overflow: hidden;
+}
+
+/* ---- Header ---- */
+.header {
+  padding: 0 2.5rem 4rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--silver-dark);
+  margin-bottom: 1rem;
+}
+.eyebrow::before {
+  content: '';
+  width: 28px; height: 1px;
+  background: var(--silver-dark);
+}
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 7vw, 6.5rem);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+}
+[data-theme="dark"] .title { color: #E8F0F8; }
+.sub {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+/* ---- Full-bleed photo grid ---- */
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 420px 280px;
+  gap: 3px;
+  background: var(--navy-deep);
+}
+
+/* 1st (featured/large) takes full left column, 2 rows */
+.card.featured {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+/* ---- Card ---- */
+.card {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  cursor: pointer;
+  background: var(--navy-deep);
+}
+.card:hover .img { transform: scale(1.08); filter: saturate(1.1) brightness(0.75); }
+.card:hover .arrow { transform: translate(0, 0); opacity: 1; }
+.card:hover .cardContent { opacity: 1; }
+
+.imgWrap {
+  position: absolute;
+  inset: 0;
+}
+.img {
+  object-fit: cover;
+  filter: saturate(0.5) brightness(0.6);
+  transition: transform 0.7s cubic-bezier(0.4,0,0.2,1), filter 0.7s ease;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(4,13,27,0.92) 0%, rgba(4,13,27,0.1) 60%);
+  z-index: 1;
+}
+
+/* ---- Card content ---- */
+.cardContent {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 2rem;
+  z-index: 2;
+  transition: opacity 0.3s ease;
+}
+.card.featured .cardContent { padding: 2.5rem 3rem; }
+
+.label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 0.5rem;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #fff;
+  line-height: 0.95;
+  margin-bottom: 1.25rem;
+}
+.card.featured .name { font-size: clamp(3.5rem, 5.5vw, 5.5rem); }
+
+.cardBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.count {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+.arrow {
+  width: 38px; height: 38px;
+  border: 1px solid rgba(255,255,255,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transform: translate(-8px, 8px);
+  opacity: 0;
+  transition: all 0.3s var(--ease);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 320px 320px 240px;
+  }
+  .card.featured {
+    grid-column: 1 / span 2;
+    grid-row: 1;
+  }
+}
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(5, 260px);
+    gap: 2px;
+  }
+  .card.featured {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}

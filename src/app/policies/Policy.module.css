@@ -1,0 +1,70 @@
+.wrap {
+  background: var(--bg-body);
+  min-height: 100vh;
+  padding-bottom: 5rem;
+}
+
+.header {
+  background: linear-gradient(135deg, var(--primary) 0%, #1a3a6e 100%);
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.title { font-family: var(--font-display); font-size: 2.5rem; color: #fff; position: relative; z-index: 1; margin: 0; }
+.desc { color: rgba(255,255,255,0.7); position: relative; z-index: 1; margin-top: 0.5rem; }
+
+.content {
+  max-width: 800px;
+  margin: -3rem auto 0;
+  background: var(--bg-card);
+  padding: 3rem;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  position: relative;
+  z-index: 10;
+}
+
+.content h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin: 2rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.content h2:first-child { margin-top: 0; }
+
+.content p, .content li {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.content ul {
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.content li { margin-bottom: 0.5rem; }
+
+.alert {
+  background: rgba(231,76,60,0.05);
+  border-left: 4px solid #e74c3c;
+  padding: 1rem 1.5rem;
+  border-radius: 0 8px 8px 0;
+  margin: 1.5rem 0;
+}
+.alert p { margin: 0; color: #c0392b; font-weight: 500; }
+[data-theme="dark"] .alert p { color: #e74c3c; }
+
+@media (max-width: 768px) {
+  .content { padding: 2rem 1.5rem; margin-top: -2rem; }
+}
