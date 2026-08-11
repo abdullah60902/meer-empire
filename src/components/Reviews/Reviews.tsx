@@ -1,35 +1,21 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import styles from './Reviews.module.css';
-import { reviews } from '@/data/products';
 import GoogleWidget from '@/components/GoogleWidget/GoogleWidget';
 
 export default function Reviews() {
-  const [active, setActive] = useState(0);
-  const [isAutoplay, setIsAutoplay] = useState(true);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    if (isAutoplay) {
-      intervalRef.current = setInterval(() => {
-        setActive((prev) => (prev + 1) % reviews.length);
-      }, 4000);
-    }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isAutoplay]);
-
-  const go = (i: number) => {
-    setActive(i);
-    setIsAutoplay(false);
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    setTimeout(() => setIsAutoplay(true), 8000);
-  };
 
   useEffect(() => {
     const els = sectionRef.current?.querySelectorAll('[data-aos]');
     const observer = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add(styles.visible); observer.unobserve(e.target); } }),
+      (entries) =>
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add(styles.visible);
+            observer.unobserve(e.target);
+          }
+        }),
       { threshold: 0.1 }
     );
     els?.forEach((el) => observer.observe(el));
@@ -50,90 +36,15 @@ export default function Reviews() {
             <span>Verified Google Reviews</span>
           </div>
           <h2 className={styles.title}>What Our <span>Customers Say</span></h2>
-          <p className={styles.desc}>Real reviews from Google Business & Verified Buyers</p>
+          <p className={styles.desc}>Real reviews from Google Business</p>
         </div>
 
         {/* Google Reviews Live Widget Card */}
         <div data-aos>
           <GoogleWidget />
         </div>
-
-        {/* Featured Review */}
-        <div className={styles.featured} data-aos>
-          <div className={styles.quoteIcon}>"</div>
-          <p className={styles.reviewText}>{reviews[active].text}</p>
-          <div className={styles.reviewerInfo}>
-            <div className={styles.avatar}>{reviews[active].avatar}</div>
-            <div>
-              <strong className={styles.reviewerName}>{reviews[active].name}</strong>
-              <span className={styles.reviewerLocation}>📍 {reviews[active].location}</span>
-              <div className={styles.stars}>
-                {[...Array(reviews[active].rating)].map((_, i) => (
-                  <span key={i} className={styles.star}>⭐</span>
-                ))}
-              </div>
-            </div>
-            <div className={styles.productBadge}>{reviews[active].product}</div>
-          </div>
-        </div>
-
-        {/* All Reviews Grid */}
-        <div className={styles.grid} data-aos>
-          {reviews.map((r, i) => (
-            <div
-              key={r.id}
-              className={`${styles.card} ${i === active ? styles.activeCard : ''}`}
-              onClick={() => go(i)}
-            >
-              <div className={styles.cardHeader}>
-                <div className={styles.cardAvatar}>{r.avatar}</div>
-                <div className={styles.cardInfo}>
-                  <strong>{r.name}</strong>
-                  <span>{r.location}</span>
-                </div>
-                <div className={styles.cardStars}>
-                  {'⭐'.repeat(r.rating)}
-                </div>
-              </div>
-              <p className={styles.cardText}>{r.text}</p>
-              <div className={styles.cardMeta}>
-                <span className={styles.cardProduct}>{r.product}</span>
-                <span className={styles.cardDate}>{r.date}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Dots */}
-        <div className={styles.dots} data-aos>
-          {reviews.map((_, i) => (
-            <button key={i} className={`${styles.dot} ${i === active ? styles.dotActive : ''}`} onClick={() => go(i)} />
-          ))}
-        </div>
-
-        {/* Overall Rating */}
-        <div className={styles.overall} data-aos>
-          <div className={styles.overallScore}>
-            <span className={styles.bigScore}>4.8</span>
-            <div>
-              <div className={styles.bigStars}>{'⭐'.repeat(5)}</div>
-              <span>Based on 847 reviews</span>
-            </div>
-          </div>
-          <div className={styles.bars}>
-            {[5,4,3,2,1].map((s) => {
-              const pct = s === 5 ? 78 : s === 4 ? 15 : s === 3 ? 5 : s === 2 ? 1 : 1;
-              return (
-                <div key={s} className={styles.barRow}>
-                  <span>{s} ⭐</span>
-                  <div className={styles.barBg}><div className={styles.barFill} style={{ width: `${pct}%` }} /></div>
-                  <span>{pct}%</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </div>
     </section>
   );
 }
+

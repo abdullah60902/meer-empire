@@ -3,7 +3,7 @@ import { useState, use, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { products, reviews } from '@/data/products';
+import { products } from '@/data/products';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import styles from './ProductDetail.module.css';
