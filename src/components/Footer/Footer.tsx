@@ -137,7 +137,6 @@ export default function Footer() {
                 <li><Link href="/shop?category=sports">Sports Shoes</Link></li>
                 <li><Link href="/shop?category=casual">Casual Shoes</Link></li>
                 <li><Link href="/shop?category=sneakers">Sneakers</Link></li>
-                <li><Link href="/shop?category=formal">Formal Shoes</Link></li>
                 <li><Link href="/shop?category=accessories">Accessories</Link></li>
               </ul>
             </div>

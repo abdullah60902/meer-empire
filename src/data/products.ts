@@ -2,7 +2,6 @@ export const categories = [
   { id: 'sports', name: 'Sports Shoes', icon: '🏃', count: 24, description: 'High-performance athletic footwear' },
   { id: 'casual', name: 'Casual Shoes', icon: '👟', count: 18, description: 'Everyday comfort and style' },
   { id: 'sneakers', name: 'Sneakers', icon: '✨', count: 32, description: 'Trendy street-style sneakers' },
-  { id: 'formal', name: 'Formal Shoes', icon: '👔', count: 15, description: 'Elegant office & occasion wear' },
   { id: 'accessories', name: 'Accessories', icon: '🧦', count: 20, description: 'Socks, laces, care products' },
 ];
 

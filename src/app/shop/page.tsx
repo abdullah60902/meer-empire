@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ProductCard/ProductCard';
-import { products, categories, brands, sizes, colors } from '@/data/products';
+import { products, categories, sizes, colors } from '@/data/products';
 import styles from './Shop.module.css';
 
 function ShopContent() {
@@ -92,19 +92,6 @@ function ShopContent() {
             ))}
           </ul>
         </div>
-
-        <div className={styles.filterSection}>
-          <h4>Brands</h4>
-          <div className={styles.checkboxes}>
-            {brands.map(b => (
-              <label key={b} className={styles.checkbox}>
-                <input type="checkbox" checked={activeBrands.includes(b)} onChange={() => toggleFilter(activeBrands, setActiveBrands, b)} />
-                <span>{b}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
 
       </aside>
 
