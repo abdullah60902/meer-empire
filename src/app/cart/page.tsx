@@ -40,13 +40,12 @@ const BankIcon = ({ size = 24 }: { size?: number }) => (
 
 // ─── Payment account details ─────────────────────────────────────────────────
 const PAYMENT_ACCOUNTS = {
-  jazzcash:  { number: '0321-5678901', name: 'MEER EMPIRE' },
-  easypaisa: { number: '0333-9876543', name: 'MEER EMPIRE' },
+  jazzcash:  { number: '0306-9810032', name: 'Muhammad Noman' },
+  easypaisa: { number: '0306-9810032', name: 'Muhammad Noman' },
   bank: {
-    bankName:      'Meezan Bank',
-    accountNumber: '01234567890123',
-    accountTitle:  'MEER EMPIRE',
-    iban:          'PK12MEZN0001234567890123',
+    bankName:      'United Bank Limited (UBL)',
+    accountNumber: '2419391495656',
+    accountTitle:  'Muhammad Hussian',
   },
 };
 
@@ -366,15 +365,6 @@ export default function CartPage() {
           <div className={styles.acRow}>
             <span>Account Title</span>
             <strong>{PAYMENT_ACCOUNTS.bank.accountTitle}</strong>
-          </div>
-          <div className={styles.acRow}>
-            <span>IBAN</span>
-            <div className={styles.acValueRow}>
-              <strong style={{ fontSize: '0.8rem' }}>{PAYMENT_ACCOUNTS.bank.iban}</strong>
-              <button type="button" className={styles.copyBtn} onClick={() => copyToClipboard(PAYMENT_ACCOUNTS.bank.iban, 'ib')}>
-                {copied === 'ib' ? '✅ Copied!' : '📋 Copy'}
-              </button>
-            </div>
           </div>
           <div className={styles.acAmountRow}>
             <span>Amount to Send</span>

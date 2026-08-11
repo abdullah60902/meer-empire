@@ -38,7 +38,7 @@ export default function ReturnPolicyPage() {
           <h2>4. Process for Exchange</h2>
           <p>To initiate an exchange:</p>
           <ol>
-            <li>Contact our support team via WhatsApp at +92 300 1234567.</li>
+            <li>Contact our support team via WhatsApp at +92 308 7975435.</li>
             <li>Provide your Order ID and the uncut unboxing video clearly showing the issue.</li>
             <li>Once approved by our team, we will guide you on how to send the item back to us.</li>
             <li>The customer is responsible for the return shipping costs unless the wrong item was sent by us.</li>

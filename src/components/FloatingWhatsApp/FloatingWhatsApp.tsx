@@ -5,7 +5,7 @@ import styles from './FloatingWhatsApp.module.css';
 export default function FloatingWhatsApp() {
   const [open, setOpen] = useState(false);
 
-  const phoneNumber = '923001234567'; // Replace with actual number
+  const phoneNumber = '923087975435';
   const message = encodeURIComponent('Hello! I am interested in purchasing shoes from MEER EMPIRE. Can you please help me?');
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
 

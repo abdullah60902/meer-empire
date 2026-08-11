@@ -70,15 +70,17 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className={styles.card}>
-      {/* Image */}
-      <Link href={`/product/${product.id}`} className={styles.imgWrap} style={{ display: 'block' }}>
-        <Image
-          src={product.images[0]}
-          alt={product.name}
-          fill
-          className={styles.img}
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
+      {/* Image Container */}
+      <div className={styles.imgWrap}>
+        <Link href={`/product/${product.id}`} style={{ display: 'block', width: '100%', height: '100%', position: 'relative' }}>
+          <Image
+            src={product.images[0]}
+            alt={product.name}
+            fill
+            className={styles.img}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        </Link>
 
         {/* Badges */}
         <div className={styles.badges}>
@@ -113,7 +115,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </svg>
           {addedToCart ? '✓ Added to Cart!' : 'Add to Cart'}
         </button>
-      </Link>
+      </div>
 
       {/* Content */}
       <div className={styles.content}>

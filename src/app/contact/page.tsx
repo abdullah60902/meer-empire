@@ -33,11 +33,11 @@ export default function ContactPage() {
               <p>Whether you have a question about an order, need sizing advice, or just want to talk shoes, our team is ready to answer all your questions.</p>
               
               <div className={styles.contactItems}>
-                <a href="https://wa.me/923001234567" target="_blank" rel="noreferrer" className={styles.contactItem}>
+                <a href="https://wa.me/923087975435" target="_blank" rel="noreferrer" className={styles.contactItem}>
                   <div className={styles.icon}>💬</div>
                   <div>
                     <strong>WhatsApp Support</strong>
-                    <span>+92 300 1234567</span>
+                    <span>+92 308 7975435</span>
                     <small>Usually replies within 10 mins</small>
                   </div>
                 </a>

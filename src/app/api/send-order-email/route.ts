@@ -275,7 +275,7 @@ export async function POST(req: NextRequest) {
             ${isApproved ? `
             <div style="text-align:center;margin:24px 0;">
               <p style="font-size:14px;color:#555;margin-bottom:16px;">Need help? Contact us anytime.</p>
-              <a href="https://wa.me/923001234567" style="background:#25D366;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;display:inline-block;">💬 WhatsApp Us</a>
+              <a href="https://wa.me/923087975435" style="background:#25D366;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;display:inline-block;">💬 WhatsApp Us</a>
             </div>` : ''}
 
           </td>
