@@ -7,7 +7,6 @@ import Navbar from "@/components/Navbar/Navbar";
 import SlideCart from "@/components/Cart/SlideCart";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp/FloatingWhatsApp";
 import BackToTop from "@/components/BackToTop/BackToTop";
-import LoadingScreen from "@/components/LoadingScreen/LoadingScreen";
 import Footer from "@/components/Footer/Footer";
 
 export const metadata: Metadata = {
@@ -39,7 +38,6 @@ export default function RootLayout({
         <ThemeProvider>
           <CartProvider>
             <WishlistProvider>
-              <LoadingScreen />
               <Navbar />
               <SlideCart />
               <main className="page-enter">{children}</main>
