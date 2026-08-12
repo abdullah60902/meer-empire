@@ -115,8 +115,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
 
             <div className={styles.priceWrap}>
-              <span className={styles.price}>Rs. {product.price.toLocaleString()}</span>
-              {product.oldPrice && <span className={styles.oldPrice}>Rs. {product.oldPrice.toLocaleString()}</span>}
+              <span className={styles.price}>Coming Soon</span>
             </div>
 
             <p className={styles.desc}>{product.description}</p>

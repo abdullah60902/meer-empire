@@ -137,10 +137,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
         <div className={styles.footer}>
           <div className={styles.priceWrap}>
-            <span className={styles.price}>Rs. {product.price.toLocaleString()}</span>
-            {product.oldPrice && (
-              <span className={styles.oldPrice}>Rs. {product.oldPrice.toLocaleString()}</span>
-            )}
+            <span className={styles.price}>Coming Soon</span>
           </div>
           <Link href={`/product/${product.id}`} className={styles.viewBtn}>
             Details
