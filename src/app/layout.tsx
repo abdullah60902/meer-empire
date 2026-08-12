@@ -14,6 +14,14 @@ export const metadata: Metadata = {
   description:
     "Shop premium imported branded shoes from Nike, Adidas, Puma, New Balance and more at MEER EMPIRE. Premium quality, original designs, comfortable fit. Cash on Delivery available across Pakistan.",
   keywords: "imported branded shoes, premium shoes, Nike, Adidas, Puma, MEER EMPIRE, online shoes Pakistan, cash on delivery shoes",
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/img/favicon.png', type: 'image/png' },
+    ],
+    shortcut: '/img/favicon.png',
+    apple: '/img/favicon.png',
+  },
   openGraph: {
     title: "MEER EMPIRE – Premium Imported Branded Shoes",
     description: "Premium quality imported branded shoes. Original designs. Cash On Delivery available.",
@@ -30,7 +38,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" href="/img/favicon.png" />
+        <link rel="shortcut icon" href="/img/favicon.png" />
+        <link rel="apple-touch-icon" href="/img/favicon.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#0B2345" />
       </head>

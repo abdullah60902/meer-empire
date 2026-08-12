@@ -7,12 +7,23 @@ import styles from './Admin.module.css';
 const ADMIN_PASSWORD = 'meer@admin2024';
 
 type FilterTab = 'all' | 'pending' | 'approved' | 'rejected' | 'online' | 'cod';
-type AdminView = 'orders' | 'subscribers';
+type AdminView = 'orders' | 'messages' | 'subscribers';
 
 interface Subscriber {
   _id: string;
   email: string;
   subscribedAt: string;
+}
+
+interface ContactMessage {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  status: 'unread' | 'read' | 'replied';
+  createdAt: string;
 }
 
 export default function AdminDashboard() {
@@ -29,6 +40,10 @@ export default function AdminDashboard() {
   // Subscribers state
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loadingSubscribers, setLoadingSubscribers] = useState(false);
+
+  // Contact Messages state
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
 
   // Broadcast Offer Email Campaign state
   const [selectedTemplate, setSelectedTemplate] = useState<'flash_sale' | 'new_arrival' | 'custom'>('flash_sale');
@@ -59,12 +74,58 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadMessages = async () => {
+    setLoadingMessages(true);
+    try {
+      const res = await fetch('/api/contact');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.messages)) {
+        setMessages(data.messages);
+      }
+    } catch (err) {
+      console.error('Failed to load contact messages', err);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  const handleDeleteMessage = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this message?')) return;
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessages((prev) => prev.filter((m) => m._id !== id));
+      }
+    } catch (err) {
+      console.error('Failed to delete message', err);
+    }
+  };
+
+  const handleUpdateMessageStatus = async (id: string, status: 'unread' | 'read' | 'replied') => {
+    try {
+      await fetch('/api/contact', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      });
+      setMessages((prev) => prev.map((m) => (m._id === id ? { ...m, status } : m)));
+    } catch (err) {
+      console.error('Failed to update message status', err);
+    }
+  };
+
   useEffect(() => {
     const auth = sessionStorage.getItem('meer_admin_auth');
     if (auth === 'true') {
       setIsAuthenticated(true);
       loadOrders();
       loadSubscribers();
+      loadMessages();
     }
   }, []);
 
@@ -75,6 +136,7 @@ export default function AdminDashboard() {
       sessionStorage.setItem('meer_admin_auth', 'true');
       loadOrders();
       loadSubscribers();
+      loadMessages();
     } else {
       setAuthError('Incorrect password. Please try again.');
     }
@@ -287,6 +349,27 @@ export default function AdminDashboard() {
                 }}
               >
                 📦 Orders ({stats.total})
+              </button>
+              <button
+                onClick={() => setActiveView('messages')}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: activeView === 'messages' ? '#ffffff' : 'transparent',
+                  color: activeView === 'messages' ? '#0B2345' : '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                  position: 'relative',
+                }}
+              >
+                📩 Messages ({messages.length})
+                {messages.filter(m => m.status === 'unread').length > 0 && (
+                  <span style={{ marginLeft: '6px', background: '#ef4444', color: '#fff', padding: '2px 7px', borderRadius: '10px', fontSize: '0.72rem', fontWeight: 800 }}>
+                    {messages.filter(m => m.status === 'unread').length} NEW
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setActiveView('subscribers')}
@@ -540,7 +623,170 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* ─── 2. SUBSCRIBERS VIEW ───────────────────────────────────────────── */}
+        {/* ─── 2. CONTACT MESSAGES VIEW ───────────────────────────────────────── */}
+        {activeView === 'messages' && (
+          <div className={styles.dashContent}>
+            {/* Header Box */}
+            <div className={styles.subscribersBox}>
+              <div className={styles.subscribersHeader}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--text-primary)' }}>📩 Customer Contact Inquiries ({messages.length})</h3>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Messages submitted by customers from the Contact Us page & auto-sent to info.meerempire@gmail.com</p>
+                </div>
+                <button onClick={loadMessages} style={{ padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-section)', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  🔄 Refresh Messages
+                </button>
+              </div>
+
+              {/* Message Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '1.5rem', marginBottom: '2rem' }}>
+                <div style={{ background: 'var(--bg-section)', padding: '1.25rem', borderRadius: '10px', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Total Messages</span>
+                  <strong style={{ display: 'block', fontSize: '1.8rem', color: 'var(--text-primary)', marginTop: '0.2rem' }}>{messages.length}</strong>
+                </div>
+                <div style={{ background: 'rgba(239,68,68,0.06)', padding: '1.25rem', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.2)' }}>
+                  <span style={{ fontSize: '0.78rem', color: '#dc2626', fontWeight: 700, textTransform: 'uppercase' }}>Unread Inquiries</span>
+                  <strong style={{ display: 'block', fontSize: '1.8rem', color: '#dc2626', marginTop: '0.2rem' }}>{messages.filter(m => m.status === 'unread').length}</strong>
+                </div>
+                <div style={{ background: 'rgba(34,197,94,0.06)', padding: '1.25rem', borderRadius: '10px', border: '1px solid rgba(34,197,94,0.2)' }}>
+                  <span style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: 700, textTransform: 'uppercase' }}>Replied Messages</span>
+                  <strong style={{ display: 'block', fontSize: '1.8rem', color: '#16a34a', marginTop: '0.2rem' }}>{messages.filter(m => m.status === 'replied').length}</strong>
+                </div>
+              </div>
+
+              {/* Messages Grid */}
+              {loadingMessages ? (
+                <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Loading contact messages...</p>
+              ) : messages.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <span className={styles.emptyIcon}>📩</span>
+                  <h3>No Messages Received Yet</h3>
+                  <p>When customers fill out the Contact Us form, their messages will appear here and arrive in your email.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  {messages.map((msg) => (
+                    <div
+                      key={msg._id}
+                      style={{
+                        background: msg.status === 'unread' ? 'rgba(245,158,11,0.03)' : 'var(--bg-card)',
+                        border: '1px solid ' + (msg.status === 'unread' ? '#f59e0b' : 'var(--border)'),
+                        borderRadius: '12px',
+                        padding: '1.5rem',
+                        position: 'relative',
+                        transition: 'var(--transition)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                            <strong style={{ fontSize: '1.15rem', color: 'var(--text-primary)' }}>👤 {msg.name}</strong>
+                            <span style={{ background: '#0B2345', color: '#fff', padding: '3px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700 }}>
+                              {msg.subject}
+                            </span>
+                            <span style={{
+                              padding: '3px 10px',
+                              borderRadius: '6px',
+                              fontSize: '0.78rem',
+                              fontWeight: 700,
+                              background: msg.status === 'unread' ? '#fee2e2' : msg.status === 'replied' ? '#dcfce7' : '#e2e8f0',
+                              color: msg.status === 'unread' ? '#dc2626' : msg.status === 'replied' ? '#15803d' : '#475569',
+                            }}>
+                              {msg.status === 'unread' ? '⏳ Unread' : msg.status === 'replied' ? '✅ Replied' : '👁️ Read'}
+                            </span>
+                          </div>
+                          <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                            Received on: {new Date(msg.createdAt).toLocaleString('en-PK', { timeZone: 'Asia/Karachi' })}
+                          </p>
+                        </div>
+
+                        {/* Actions */}
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <a
+                            href={`mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject)} - Meer Empire`}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={() => handleUpdateMessageStatus(msg._id, 'replied')}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: '6px',
+                              background: '#0B2345',
+                              color: '#fff',
+                              textDecoration: 'none',
+                              fontSize: '0.82rem',
+                              fontWeight: 700,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.3rem',
+                            }}
+                          >
+                            ✉️ Reply Email
+                          </a>
+                          {msg.phone && (
+                            <a
+                              href={`https://wa.me/${msg.phone.replace(/[^0-9]/g, '')}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={() => handleUpdateMessageStatus(msg._id, 'replied')}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                background: '#25D366',
+                                color: '#fff',
+                                textDecoration: 'none',
+                                fontSize: '0.82rem',
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                              }}
+                            >
+                              💬 Reply WhatsApp
+                            </a>
+                          )}
+                          {msg.status === 'unread' ? (
+                            <button
+                              onClick={() => handleUpdateMessageStatus(msg._id, 'read')}
+                              style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-section)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
+                            >
+                              Mark Read
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleUpdateMessageStatus(msg._id, 'unread')}
+                              style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-section)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
+                            >
+                              Mark Unread
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteMessage(msg._id)}
+                            style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.1)', color: '#dc2626', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700 }}
+                          >
+                            🗑️ Delete
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Contact Info Sub-row */}
+                      <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1rem', fontSize: '0.9rem', flexWrap: 'wrap', background: 'var(--bg-section)', padding: '0.75rem 1rem', borderRadius: '8px' }}>
+                        <span>✉️ <strong>Email:</strong> <a href={`mailto:${msg.email}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>{msg.email}</a></span>
+                        <span>📞 <strong>Phone:</strong> {msg.phone ? <a href={`tel:${msg.phone}`} style={{ color: 'inherit' }}>{msg.phone}</a> : 'N/A'}</span>
+                      </div>
+
+                      {/* Message Content */}
+                      <div style={{ background: 'var(--bg-body)', padding: '1rem 1.25rem', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                        {msg.message}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ─── 3. SUBSCRIBERS VIEW ───────────────────────────────────────────── */}
         {activeView === 'subscribers' && (
           <div className={styles.dashContent}>
             {/* Broadcast Offer Campaign Sender Card */}

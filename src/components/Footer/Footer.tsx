@@ -85,6 +85,14 @@ export default function Footer() {
               <p className={styles.brandDesc}>
                 MEER EMPIRE provides imported branded shoes with premium craftsmanship, excellent comfort, stylish designs and trusted customer service.
               </p>
+              <div style={{ marginTop: '0.8rem', marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>📍</span> Dawood Colony, Sargodha Road, Faisalabad
+                </p>
+                <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>✉️</span> <a href="mailto:info.meerempire@gmail.com" style={{ color: 'inherit', textDecoration: 'none' }}>info.meerempire@gmail.com</a>
+                </p>
+              </div>
               <div className={styles.socials}>
                 {/* Facebook */}
                 <a href="https://www.facebook.com/profile.php?id=61590741872316" target="_blank" rel="noreferrer" aria-label="Facebook" className={styles.socialIcon} title="Facebook">

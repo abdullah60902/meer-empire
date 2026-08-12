@@ -49,7 +49,7 @@ const PAYMENT_ACCOUNTS = {
   },
 };
 
-const ADMIN_EMAIL = 'meerempire.pk@gmail.com';
+const ADMIN_EMAIL = 'info.meerempire@gmail.com';
 
 type PayChannel = 'jazzcash' | 'easypaisa' | 'bank';
 type Step = 1 | 2;
