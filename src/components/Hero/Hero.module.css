@@ -6,11 +6,12 @@
 .hero {
   position: relative;
   width: 100%;
-  min-height: 100vh;
+  min-height: 80vh;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   overflow: hidden;
   background: var(--navy-deep);
+  padding: 4rem 0 5rem;
 }
 
 /* ---- Background ---- */
@@ -60,17 +61,15 @@
   text-transform: uppercase;
   color: rgba(255,255,255,0.25);
 }
-@media (max-width: 768px) { .sideLabel { display: none; } }
 
 /* ---- Main Content ---- */
 .content {
   position: relative;
   z-index: 4;
-  padding: 0 2.5rem 6rem 7rem;
+  padding: 0 2.5rem 0 7rem;
   max-width: 900px;
   animation: fadeUp 0.9s var(--ease-out) both;
 }
-@media (max-width: 768px) { .content { padding: 0 1.5rem 5rem; } }
 
 /* Tag pill */
 .tag {
@@ -97,7 +96,7 @@
 
 /* Giant heading — this is the hero statement */
 .heading {
-  margin-top: 3.5rem;
+  margin-top: 1.5rem;
   display: flex;
   flex-direction: column;
   font-family: var(--font-display);
@@ -108,17 +107,17 @@
   color: #fff;
 }
 .line1 {
-  font-size: clamp(5rem, 13vw, 14rem);
+  font-size: clamp(4.5rem, 12vw, 13rem);
   animation: fadeUp 0.8s 0.1s var(--ease-out) both;
 }
 .line2 {
-  font-size: clamp(5rem, 13vw, 14rem);
+  font-size: clamp(4.5rem, 12vw, 13rem);
   color: transparent;
   -webkit-text-stroke: 2px rgba(255,255,255,0.7);
   animation: fadeUp 0.8s 0.2s var(--ease-out) both;
 }
 .line3 {
-  font-size: clamp(3rem, 8.5vw, 9.5rem);
+  font-size: clamp(2.8rem, 8vw, 9rem);
   color: var(--silver-light);
   animation: fadeUp 0.8s 0.3s var(--ease-out) both;
 }
@@ -151,7 +150,7 @@
   align-items: center;
   gap: 1.25rem;
   flex-wrap: wrap;
-  margin-bottom: 4rem;
+  margin-bottom: 3.5rem;
   animation: fadeUp 0.8s 0.5s var(--ease-out) both;
 }
 
@@ -259,9 +258,72 @@
   100% { transform: translateY(110px); }
 }
 
+/* ---- Responsive Media Queries ---- */
+@media (max-width: 1024px) {
+  .hero {
+    min-height: auto;
+    align-items: flex-start;
+    padding: 2.5rem 0 3.5rem;
+  }
+  .content {
+    padding: 0 2.5rem;
+  }
+  .heading {
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .sideLabel {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
-  .statsBar { gap: 1.25rem; }
-  .statDivider { height: 24px; }
-  .ctaRow { gap: 0.75rem; }
-  .btnShop, .btnExplore { padding: 0.9rem 1.75rem; font-size: 0.9rem; }
+  .hero {
+    min-height: auto;
+    align-items: flex-start;
+    padding: 1.75rem 0 2.5rem;
+  }
+  .content {
+    padding: 0 1.25rem;
+  }
+  .heading {
+    margin-top: 0.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .line1, .line2 {
+    font-size: clamp(3.2rem, 13vw, 5.5rem);
+  }
+  .line3 {
+    font-size: clamp(2rem, 8.5vw, 3.8rem);
+  }
+  .sub {
+    font-size: 0.8rem;
+    margin-bottom: 0.6rem;
+  }
+  .codBadge {
+    margin-bottom: 1.5rem;
+  }
+  .ctaRow {
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+  .btnShop, .btnExplore {
+    padding: 0.85rem 1.6rem;
+    font-size: 0.88rem;
+  }
+  .statsBar {
+    gap: 1.25rem;
+  }
+  .stat strong {
+    font-size: 1.4rem;
+  }
+  .stat span {
+    font-size: 0.6rem;
+  }
+  .statDivider {
+    height: 24px;
+  }
+  .scrollLine {
+    display: none;
+  }
 }
