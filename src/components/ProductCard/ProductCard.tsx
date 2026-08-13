@@ -84,7 +84,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
         {/* Badges */}
         <div className={styles.badges}>
-          <span className={styles.badgeComingSoon}>🚀 Coming Soon</span>
+          {product.badge && <span className={styles.badgeNew}>{product.badge}</span>}
           {product.isNew && <span className={styles.badgeNew}>New In</span>}
           {discountPct > 0 && <span className={styles.badgeSale}>-{discountPct}%</span>}
         </div>
@@ -137,7 +137,10 @@ export default function ProductCard({ product }: { product: Product }) {
 
         <div className={styles.footer}>
           <div className={styles.priceWrap}>
-            <span className={styles.price}>Coming Soon</span>
+            <span className={styles.price}>Rs. {product.price.toLocaleString()}</span>
+            {product.oldPrice && (
+              <span className={styles.oldPrice}>Rs. {product.oldPrice.toLocaleString()}</span>
+            )}
           </div>
           <Link href={`/product/${product.id}`} className={styles.viewBtn}>
             Details

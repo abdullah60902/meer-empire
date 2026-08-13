@@ -120,9 +120,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <div className={styles.details}>
             <div className={styles.brand}>{product.brand}</div>
             <h1 className={styles.title}>{product.name}</h1>
-            <div style={{ display: 'inline-block', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff', padding: '0.4rem 1rem', borderRadius: '6px', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.1em', marginBottom: '1rem', boxShadow: '0 4px 12px rgba(245,158,11,0.3)' }}>
-              🚀 COMING SOON
-            </div>
             
             <div className={styles.meta}>
               <div className={styles.rating}>
@@ -142,7 +139,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
 
             <div className={styles.priceWrap}>
-              <span className={styles.price}>Coming Soon</span>
+              <span className={styles.price}>Rs. {product.price.toLocaleString()}</span>
+              {product.oldPrice && (
+                <span className={styles.oldPrice}>Rs. {product.oldPrice.toLocaleString()}</span>
+              )}
             </div>
 
             <p className={styles.desc}>{product.description}</p>
