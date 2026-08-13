@@ -92,6 +92,7 @@ export default function AdminDashboard() {
     'UK/PK 10 | US 11 | EUR 44',
   ]);
   const [prodImages, setProdImages] = useState<string[]>([]);
+  const [editingProductId, setEditingProductId] = useState<string | number | null>(null);
   const [imageUrlInput, setImageUrlInput] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [isNewArrival, setIsNewArrival] = useState(true);
@@ -223,7 +224,43 @@ export default function AdminDashboard() {
     );
   };
 
-  const handleCreateProduct = async (e: React.FormEvent) => {
+  const handleSetAsFrontImage = (index: number) => {
+    if (index === 0) return;
+    setProdImages((prev) => {
+      const newArr = [...prev];
+      const [selectedImg] = newArr.splice(index, 1);
+      newArr.unshift(selectedImg);
+      return newArr;
+    });
+  };
+
+  const handleStartEditProduct = (prod: AdminProductItem) => {
+    setEditingProductId(prod.id);
+    setProdName(prod.name);
+    setProdBrand(prod.brand || 'Meer Empire');
+    setProdCategory(prod.category || 'sports');
+    setProdPrice(String(prod.price || ''));
+    setProdOldPrice(prod.oldPrice ? String(prod.oldPrice) : '');
+    setProdBadge(prod.badge || 'Premium');
+    setProdDesc(prod.description || '');
+    setProdFeatures(prod.features?.length ? prod.features : ['Imported Branded Shoe', 'Breathable Premium Upper']);
+    setSelectedSizes(prod.sizes?.length ? prod.sizes : ['UK/PK 7 | US 8 | EUR 41', 'UK/PK 8 | US 9 | EUR 42']);
+    setProdImages(prod.images || []);
+    setUploadStatus({ type: '', msg: '' });
+    setActiveView('add-product');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProductId(null);
+    setProdName('');
+    setProdPrice('');
+    setProdOldPrice('');
+    setProdDesc('');
+    setProdImages([]);
+    setUploadStatus({ type: '', msg: '' });
+  };
+
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!prodName || !prodPrice || !prodDesc) {
       setUploadStatus({ type: 'error', msg: 'Please fill in product name, price, and description.' });
@@ -241,42 +278,54 @@ export default function AdminDashboard() {
     setUploadStatus({ type: '', msg: '' });
 
     try {
+      const isEdit = Boolean(editingProductId);
+      const method = isEdit ? 'PUT' : 'POST';
+      const bodyPayload = {
+        ...(isEdit ? { id: editingProductId } : {}),
+        name: prodName,
+        brand: prodBrand,
+        category: prodCategory,
+        price: Number(prodPrice),
+        oldPrice: prodOldPrice ? Number(prodOldPrice) : undefined,
+        stock: 50,
+        badge: prodBadge,
+        description: prodDesc,
+        features: prodFeatures,
+        colors: ['#000000', '#FFFFFF'],
+        sizes: selectedSizes,
+        images: prodImages,
+        isNew: isNewArrival,
+        isBestSeller: isBestSeller,
+        isFlashSale: isFlashSale,
+      };
+
       const res = await fetch('/api/products', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: prodName,
-          brand: prodBrand,
-          category: prodCategory,
-          price: Number(prodPrice),
-          oldPrice: prodOldPrice ? Number(prodOldPrice) : undefined,
-          stock: 50,
-          badge: prodBadge,
-          description: prodDesc,
-          features: prodFeatures,
-          colors: ['#000000', '#FFFFFF'],
-          sizes: selectedSizes,
-          images: prodImages,
-          isNew: isNewArrival,
-          isBestSeller: isBestSeller,
-          isFlashSale: isFlashSale,
-        }),
+        body: JSON.stringify(bodyPayload),
       });
 
       const data = await res.json();
       if (data.success) {
-        setUploadStatus({ type: 'success', msg: '🎉 Product uploaded successfully to website catalog!' });
-        setProdName('');
-        setProdPrice('');
-        setProdOldPrice('');
-        setProdDesc('');
-        setProdImages([]);
+        setUploadStatus({
+          type: 'success',
+          msg: isEdit ? '🎉 Product & Front Cover Image updated successfully!' : '🎉 Product uploaded successfully to website catalog!',
+        });
+        if (!isEdit) {
+          setProdName('');
+          setProdPrice('');
+          setProdOldPrice('');
+          setProdDesc('');
+          setProdImages([]);
+        } else {
+          setEditingProductId(null);
+        }
         loadAdminProducts();
       } else {
         setUploadStatus({ type: 'error', msg: `❌ Error: ${data.error}` });
       }
     } catch (err: any) {
-      setUploadStatus({ type: 'error', msg: '❌ Failed to upload product. Please try again.' });
+      setUploadStatus({ type: 'error', msg: '❌ Failed to save product. Please try again.' });
     } finally {
       setSubmittingProduct(false);
     }
@@ -868,15 +917,31 @@ export default function AdminDashboard() {
             <div className={styles.productFormCard}>
               <div className={styles.productFormHeader}>
                 <div>
-                  <h2 className={styles.productFormTitle}>➕ Upload New Product / Project</h2>
-                  <p className={styles.productFormSub}>Fill in product details, images, quality specs, sizes, and price to publish on live website.</p>
+                  <h2 className={styles.productFormTitle}>
+                    {editingProductId ? '✏️ Edit Product Details & Change Front Image' : '➕ Upload New Product / Project'}
+                  </h2>
+                  <p className={styles.productFormSub}>
+                    {editingProductId
+                      ? 'Modify product info, price, sizes, or click "Make Front Cover" on any image to change the main showroom image.'
+                      : 'Fill in product details, images, quality specs, sizes, and price to publish on live website.'}
+                  </p>
                 </div>
-                <button
-                  onClick={() => setActiveView('products')}
-                  style={{ padding: '0.6rem 1.2rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
-                >
-                  👟 View Catalog ({productsList.length})
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {editingProductId && (
+                    <button
+                      onClick={handleCancelEdit}
+                      style={{ padding: '0.6rem 1.2rem', background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}
+                    >
+                      ✕ Cancel Edit
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setActiveView('products')}
+                    style={{ padding: '0.6rem 1.2rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    👟 View Catalog ({productsList.length})
+                  </button>
+                </div>
               </div>
 
               {uploadStatus.msg && (
@@ -894,7 +959,7 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              <form onSubmit={handleCreateProduct} className={styles.formGrid}>
+              <form onSubmit={handleSaveProduct} className={styles.formGrid}>
                 {/* Product Name */}
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>👟 Product Name *</label>
@@ -1053,26 +1118,52 @@ export default function AdminDashboard() {
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={url} alt={`Preview ${idx + 1}`} className={styles.imagePreviewImg} />
                           
-                          {/* Position Badge */}
-                          <span style={{
-                            position: 'absolute',
-                            bottom: '6px',
-                            left: '6px',
-                            right: '6px',
-                            background: idx === 0 ? 'rgba(11, 35, 69, 0.9)' : 'rgba(0, 0, 0, 0.75)',
-                            color: idx === 0 ? '#D4AF37' : '#ffffff',
-                            border: idx === 0 ? '1px solid #D4AF37' : '1px solid rgba(255,255,255,0.2)',
-                            borderRadius: '4px',
-                            fontSize: '0.7rem',
-                            fontWeight: 800,
-                            padding: '2px 4px',
-                            textAlign: 'center',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}>
-                            {idx === 0 ? '⭐ Front Cover (Main)' : `🖼️ Detail #${idx + 1}`}
-                          </span>
+                          {/* Position Badge or Make Front Button */}
+                          {idx === 0 ? (
+                            <span style={{
+                              position: 'absolute',
+                              bottom: '6px',
+                              left: '6px',
+                              right: '6px',
+                              background: 'rgba(11, 35, 69, 0.95)',
+                              color: '#D4AF37',
+                              border: '1px solid #D4AF37',
+                              borderRadius: '4px',
+                              fontSize: '0.7rem',
+                              fontWeight: 800,
+                              padding: '3px 4px',
+                              textAlign: 'center',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }}>
+                              ⭐ Front Cover (Main)
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleSetAsFrontImage(idx)}
+                              style={{
+                                position: 'absolute',
+                                bottom: '6px',
+                                left: '6px',
+                                right: '6px',
+                                background: 'rgba(212, 175, 55, 0.95)',
+                                color: '#0B2345',
+                                border: 'none',
+                                borderRadius: '4px',
+                                fontSize: '0.7rem',
+                                fontWeight: 800,
+                                padding: '3px 4px',
+                                cursor: 'pointer',
+                                textAlign: 'center',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                              }}
+                              title="Click to set this image as Front Cover"
+                            >
+                              ⭐ Make Front Cover
+                            </button>
+                          )}
 
                           <button
                             type="button"
@@ -1171,7 +1262,9 @@ export default function AdminDashboard() {
                     className={styles.submitBtn}
                     disabled={submittingProduct || uploadingImage}
                   >
-                    {submittingProduct ? '⏳ Uploading Product to Website...' : '🚀 Publish Product to Website'}
+                    {submittingProduct
+                      ? (editingProductId ? '⏳ Updating Product & Images...' : '⏳ Uploading Product to Website...')
+                      : (editingProductId ? '💾 Save & Update Product Details' : '🚀 Publish Product to Website')}
                   </button>
                 </div>
               </form>
@@ -1190,7 +1283,7 @@ export default function AdminDashboard() {
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
-                    onClick={() => setActiveView('add-product')}
+                    onClick={() => { handleCancelEdit(); setActiveView('add-product'); }}
                     style={{ padding: '0.6rem 1.2rem', background: 'linear-gradient(135deg, #D4AF37 0%, #f0cf65 100%)', color: '#0B2345', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 800 }}
                   >
                     ➕ Upload New Product
@@ -1241,12 +1334,36 @@ export default function AdminDashboard() {
                             )}
                           </div>
                         </div>
-                        <button
-                          className={styles.deleteProdBtn}
-                          onClick={() => handleDeleteProduct(prod.id)}
-                        >
-                          🗑️ Delete Product
-                        </button>
+
+                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                          <button
+                            style={{
+                              flex: 1,
+                              padding: '0.55rem 0.5rem',
+                              background: 'rgba(212,175,55,0.15)',
+                              color: '#D4AF37',
+                              border: '1px solid rgba(212,175,55,0.3)',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontWeight: 700,
+                              fontSize: '0.8rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.2rem',
+                            }}
+                            onClick={() => handleStartEditProduct(prod)}
+                          >
+                            ✏️ Edit & Change Front Img
+                          </button>
+                          <button
+                            className={styles.deleteProdBtn}
+                            onClick={() => handleDeleteProduct(prod.id)}
+                            style={{ padding: '0.55rem 0.6rem' }}
+                          >
+                            🗑️ Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}

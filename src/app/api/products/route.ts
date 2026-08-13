@@ -132,3 +132,53 @@ export async function DELETE(req: NextRequest) {
     );
   }
 }
+
+export async function PUT(req: NextRequest) {
+  try {
+    await connectDB();
+    const body = await req.json();
+    const { id, name, brand, category, price, oldPrice, badge, description, features, sizes, images } = body;
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Product ID is required for update' }, { status: 400 });
+    }
+
+    const numPrice = Number(price);
+    const numOldPrice = oldPrice ? Number(oldPrice) : undefined;
+    const discount = numOldPrice && numOldPrice > numPrice 
+      ? Math.round(((numOldPrice - numPrice) / numOldPrice) * 100)
+      : 0;
+
+    const updatedProduct = await Product.findOneAndUpdate(
+      { id },
+      {
+        $set: {
+          name,
+          brand,
+          category,
+          price: numPrice,
+          oldPrice: numOldPrice,
+          discount,
+          badge,
+          description,
+          features: Array.isArray(features) ? features : [],
+          sizes: Array.isArray(sizes) ? sizes : [],
+          images: Array.isArray(images) ? images : [],
+        }
+      },
+      { new: true }
+    );
+
+    return NextResponse.json({
+      success: true,
+      product: updatedProduct,
+      message: 'Product updated successfully!',
+    });
+  } catch (error: any) {
+    console.error('Error updating product:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to update product' },
+      { status: 500 }
+    );
+  }
+}
