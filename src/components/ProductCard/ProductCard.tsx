@@ -6,8 +6,8 @@ import styles from './ProductCard.module.css';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 
-interface Product {
-  id: number;
+export interface Product {
+  id: number | string;
   name: string;
   brand: string;
   category: string;

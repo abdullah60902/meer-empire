@@ -2,12 +2,13 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { getOrders, fetchOrdersFromDB, updateOrderStatus, type Order } from '@/lib/orders';
+import { categories as defaultCategories, brands as defaultBrands, sizes as defaultSizes, colors as defaultColors } from '@/data/products';
 import styles from './Admin.module.css';
 
 const ADMIN_PASSWORD = 'meer@admin2024';
 
 type FilterTab = 'all' | 'pending' | 'approved' | 'rejected' | 'online' | 'cod';
-type AdminView = 'orders' | 'messages' | 'subscribers';
+type AdminView = 'orders' | 'messages' | 'subscribers' | 'products' | 'add-product';
 
 interface Subscriber {
   _id: string;
@@ -24,6 +25,26 @@ interface ContactMessage {
   message: string;
   status: 'unread' | 'read' | 'replied';
   createdAt: string;
+}
+
+interface AdminProductItem {
+  id: string | number;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  oldPrice?: number;
+  discount?: number;
+  stock: number;
+  badge?: string;
+  description: string;
+  features: string[];
+  colors: string[];
+  sizes: string[];
+  images: string[];
+  isNew: boolean;
+  isBestSeller: boolean;
+  isFlashSale: boolean;
 }
 
 export default function AdminDashboard() {
@@ -44,6 +65,41 @@ export default function AdminDashboard() {
   // Contact Messages state
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
+
+  // Products State
+  const [productsList, setProductsList] = useState<AdminProductItem[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  // Product Form State
+  const [prodName, setProdName] = useState('');
+  const [prodBrand, setProdBrand] = useState('Meer Empire');
+  const [prodCategory, setProdCategory] = useState('sports');
+  const [prodPrice, setProdPrice] = useState('');
+  const [prodOldPrice, setProdOldPrice] = useState('');
+  const [prodBadge, setProdBadge] = useState('Premium');
+  const [prodDesc, setProdDesc] = useState('');
+  const [featureInput, setFeatureInput] = useState('');
+  const [prodFeatures, setProdFeatures] = useState<string[]>([
+    'Imported Branded Shoe',
+    'Breathable Premium Upper',
+    'Ergonomic Cushioning & Soft Midsole',
+    'Durable Anti-Slip Rubber Outsole',
+  ]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([
+    'UK/PK 7 | US 8 | EUR 41',
+    'UK/PK 8 | US 9 | EUR 42',
+    'UK/PK 9 | US 10 | EUR 43',
+    'UK/PK 10 | US 11 | EUR 44',
+  ]);
+  const [prodImages, setProdImages] = useState<string[]>([]);
+  const [imageUrlInput, setImageUrlInput] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [isNewArrival, setIsNewArrival] = useState(true);
+  const [isBestSeller, setIsBestSeller] = useState(false);
+  const [isFlashSale, setIsFlashSale] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error' | ''; msg: string }>({ type: '', msg: '' });
+  const [submittingProduct, setSubmittingProduct] = useState(false);
+
 
   // Broadcast Offer Email Campaign state
   const [selectedTemplate, setSelectedTemplate] = useState<'flash_sale' | 'new_arrival' | 'custom'>('flash_sale');
@@ -89,6 +145,156 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadAdminProducts = async () => {
+    setLoadingProducts(true);
+    try {
+      const res = await fetch('/api/products');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.products)) {
+        setProductsList(data.products);
+      }
+    } catch (err) {
+      console.error('Failed to load products', err);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingImage(true);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        await new Promise((resolve) => {
+          reader.onloadend = async () => {
+            const base64 = reader.result as string;
+            try {
+              const res = await fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: base64, folder: 'meer_empire/products' }),
+              });
+              const data = await res.json();
+              if (data.success && data.url) {
+                setProdImages((prev) => [...prev, data.url]);
+              }
+            } catch (err) {
+              console.error('Upload error:', err);
+            }
+            resolve(true);
+          };
+        });
+      }
+    } catch (err) {
+      console.error('Failed to process file upload', err);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleAddImageUrl = () => {
+    if (!imageUrlInput.trim()) return;
+    setProdImages((prev) => [...prev, imageUrlInput.trim()]);
+    setImageUrlInput('');
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setProdImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddFeature = () => {
+    if (!featureInput.trim()) return;
+    setProdFeatures((prev) => [...prev, featureInput.trim()]);
+    setFeatureInput('');
+  };
+
+  const handleRemoveFeature = (index: number) => {
+    setProdFeatures((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleSize = (size: string) => {
+    setSelectedSizes((prev) =>
+      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+    );
+  };
+
+  const handleCreateProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!prodName || !prodPrice || !prodDesc) {
+      setUploadStatus({ type: 'error', msg: 'Please fill in product name, price, and description.' });
+      return;
+    }
+    if (prodImages.length < 4) {
+      setUploadStatus({
+        type: 'error',
+        msg: `⚠️ Minimum 4 product images required! You have added ${prodImages.length} image(s). Please upload 1 Main Front image + 3 Detail Gallery images.`,
+      });
+      return;
+    }
+
+    setSubmittingProduct(true);
+    setUploadStatus({ type: '', msg: '' });
+
+    try {
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: prodName,
+          brand: prodBrand,
+          category: prodCategory,
+          price: Number(prodPrice),
+          oldPrice: prodOldPrice ? Number(prodOldPrice) : undefined,
+          stock: 50,
+          badge: prodBadge,
+          description: prodDesc,
+          features: prodFeatures,
+          colors: ['#000000', '#FFFFFF'],
+          sizes: selectedSizes,
+          images: prodImages,
+          isNew: isNewArrival,
+          isBestSeller: isBestSeller,
+          isFlashSale: isFlashSale,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setUploadStatus({ type: 'success', msg: '🎉 Product uploaded successfully to website catalog!' });
+        setProdName('');
+        setProdPrice('');
+        setProdOldPrice('');
+        setProdDesc('');
+        setProdImages([]);
+        loadAdminProducts();
+      } else {
+        setUploadStatus({ type: 'error', msg: `❌ Error: ${data.error}` });
+      }
+    } catch (err: any) {
+      setUploadStatus({ type: 'error', msg: '❌ Failed to upload product. Please try again.' });
+    } finally {
+      setSubmittingProduct(false);
+    }
+  };
+
+  const handleDeleteProduct = async (id: string | number) => {
+    if (!confirm('Are you sure you want to remove this product from website?')) return;
+    try {
+      const res = await fetch(`/api/products?id=${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setProductsList((prev) => prev.filter((p) => String(p.id) !== String(id)));
+      }
+    } catch (err) {
+      console.error('Failed to delete product', err);
+    }
+  };
+
   const handleDeleteMessage = async (id: string) => {
     if (!confirm('Are you sure you want to delete this message?')) return;
     try {
@@ -126,6 +332,7 @@ export default function AdminDashboard() {
       loadOrders();
       loadSubscribers();
       loadMessages();
+      loadAdminProducts();
     }
   }, []);
 
@@ -137,6 +344,7 @@ export default function AdminDashboard() {
       loadOrders();
       loadSubscribers();
       loadMessages();
+      loadAdminProducts();
     } else {
       setAuthError('Incorrect password. Please try again.');
     }
@@ -147,6 +355,7 @@ export default function AdminDashboard() {
     sessionStorage.removeItem('meer_admin_auth');
     setOrders([]);
     setSubscribers([]);
+    setProductsList([]);
   };
 
   const [emailStatus, setEmailStatus] = useState<Record<string, 'sending' | 'sent' | 'failed'>>({});
@@ -349,6 +558,36 @@ export default function AdminDashboard() {
                 }}
               >
                 📦 Orders ({stats.total})
+              </button>
+              <button
+                onClick={() => setActiveView('products')}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: activeView === 'products' ? '#ffffff' : 'transparent',
+                  color: activeView === 'products' ? '#0B2345' : '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                }}
+              >
+                👟 Products ({productsList.length})
+              </button>
+              <button
+                onClick={() => setActiveView('add-product')}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: activeView === 'add-product' ? 'linear-gradient(135deg, #D4AF37 0%, #f0cf65 100%)' : 'rgba(212, 175, 55, 0.25)',
+                  color: activeView === 'add-product' ? '#0B2345' : '#D4AF37',
+                  fontWeight: 800,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                }}
+              >
+                ➕ Upload Product
               </button>
               <button
                 onClick={() => setActiveView('messages')}
@@ -623,40 +862,434 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* ─── 2. CONTACT MESSAGES VIEW ───────────────────────────────────────── */}
+        {/* ─── 2. UPLOAD PRODUCT VIEW ────────────────────────────────────────── */}
+        {activeView === 'add-product' && (
+          <div className={styles.dashContent}>
+            <div className={styles.productFormCard}>
+              <div className={styles.productFormHeader}>
+                <div>
+                  <h2 className={styles.productFormTitle}>➕ Upload New Product / Project</h2>
+                  <p className={styles.productFormSub}>Fill in product details, images, quality specs, sizes, and price to publish on live website.</p>
+                </div>
+                <button
+                  onClick={() => setActiveView('products')}
+                  style={{ padding: '0.6rem 1.2rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  👟 View Catalog ({productsList.length})
+                </button>
+              </div>
+
+              {uploadStatus.msg && (
+                <div style={{
+                  padding: '1rem',
+                  borderRadius: '10px',
+                  marginBottom: '1.5rem',
+                  background: uploadStatus.type === 'success' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  border: `1px solid ${uploadStatus.type === 'success' ? '#22c55e' : '#ef4444'}`,
+                  color: uploadStatus.type === 'success' ? '#4ade80' : '#fca5a5',
+                  fontWeight: 700,
+                  fontSize: '0.95rem'
+                }}>
+                  {uploadStatus.msg}
+                </div>
+              )}
+
+              <form onSubmit={handleCreateProduct} className={styles.formGrid}>
+                {/* Product Name */}
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>👟 Product Name *</label>
+                  <input
+                    type="text"
+                    className={styles.formInput}
+                    placeholder="e.g. Nike Air Jordan 4 Retro Metallic"
+                    value={prodName}
+                    onChange={(e) => setProdName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Brand */}
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>🏷️ Brand Name</label>
+                  <input
+                    type="text"
+                    className={styles.formInput}
+                    placeholder="e.g. Nike, Adidas, Meer Empire..."
+                    value={prodBrand}
+                    onChange={(e) => setProdBrand(e.target.value)}
+                  />
+                </div>
+
+                {/* Category */}
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>📂 Category *</label>
+                  <select
+                    className={styles.formSelect}
+                    value={prodCategory}
+                    onChange={(e) => setProdCategory(e.target.value)}
+                  >
+                    {defaultCategories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Quality Badge */}
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>⭐ Quality Badge / Description *</label>
+                  <select
+                    className={`${styles.formSelect} ${styles.qualitySelect}`}
+                    value={prodBadge}
+                    onChange={(e) => setProdBadge(e.target.value)}
+                  >
+                    <option value="Premium">✨ Premium</option>
+                    <option value="Excellent">⭐ Excellent</option>
+                    <option value="Very Good">🌟 Very Good</option>
+                    <option value="Good">👍 Good</option>
+                  </select>
+                </div>
+
+                {/* Price (Rs) */}
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>💰 Sale Price (Rs.) *</label>
+                  <input
+                    type="number"
+                    className={styles.formInput}
+                    placeholder="e.g. 12500"
+                    value={prodPrice}
+                    onChange={(e) => setProdPrice(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Old Price (Rs) */}
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>🏷️ Original / Old Price (Rs.) [Optional]</label>
+                  <input
+                    type="number"
+                    className={styles.formInput}
+                    placeholder="e.g. 16000 (Calculates Discount %)"
+                    value={prodOldPrice}
+                    onChange={(e) => setProdOldPrice(e.target.value)}
+                  />
+                </div>
+
+                {/* Available Sizes */}
+                <div className={styles.formGroupFull}>
+                  <label className={styles.formLabel}>📏 Available Sizes (UK/PK, US, EUR)</label>
+                  <div className={styles.chipGroup}>
+                    {defaultSizes.map((size) => {
+                      const isActive = selectedSizes.includes(size);
+                      return (
+                        <button
+                          key={size}
+                          type="button"
+                          className={`${styles.chipBtn} ${isActive ? styles.chipBtnActive : ''}`}
+                          onClick={() => toggleSize(size)}
+                        >
+                          {isActive ? '✓ ' : ''}{size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Images Upload / URL */}
+                <div className={styles.formGroupFull}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                    <label className={styles.formLabel} style={{ margin: 0 }}>🖼️ Product Images * (Minimum 4 Required)</label>
+                    <span style={{ fontSize: '0.82rem', color: prodImages.length >= 4 ? '#4ade80' : '#fca5a5', fontWeight: 700 }}>
+                      {prodImages.length >= 4 ? `✅ ${prodImages.length} Images Added (Ready)` : `⚠️ ${prodImages.length}/4 Images Added`}
+                    </span>
+                  </div>
+
+                  <div className={styles.imageDropArea} onClick={() => document.getElementById('fileUploadInput')?.click()}>
+                    <span style={{ fontSize: '2rem' }}>☁️</span>
+                    <p style={{ margin: '0.5rem 0 0.2rem', fontWeight: 700, color: '#D4AF37' }}>
+                      Click to upload product images from computer (Select 4 or more)
+                    </p>
+                    <p style={{ margin: 0, fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)' }}>
+                      📌 <strong>1st Image:</strong> Front Cover (Showroom Card View) &nbsp;|&nbsp; 📌 <strong>2nd, 3rd, 4th Images:</strong> View Details Gallery
+                    </p>
+                    <input
+                      id="fileUploadInput"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      style={{ display: 'none' }}
+                      onChange={handleFileUpload}
+                    />
+                  </div>
+
+                  {uploadingImage && (
+                    <p style={{ color: '#D4AF37', fontSize: '0.85rem', marginTop: '0.5rem', fontWeight: 600 }}>
+                      ⏳ Uploading image to Cloudinary...
+                    </p>
+                  )}
+
+                  {/* Or direct URL input */}
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                    <input
+                      type="text"
+                      className={styles.formInput}
+                      placeholder="Or paste image URL directly (e.g. https://...)"
+                      value={imageUrlInput}
+                      onChange={(e) => setImageUrlInput(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddImageUrl}
+                      style={{ padding: '0 1.2rem', background: 'rgba(212,175,55,0.2)', border: '1px solid #D4AF37', color: '#D4AF37', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      + Add URL
+                    </button>
+                  </div>
+
+                  {/* Image Preview Grid */}
+                  {prodImages.length > 0 && (
+                    <div className={styles.imagePreviewsGrid}>
+                      {prodImages.map((url, idx) => (
+                        <div key={idx} className={styles.imagePreviewBox} style={{ position: 'relative' }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={url} alt={`Preview ${idx + 1}`} className={styles.imagePreviewImg} />
+                          
+                          {/* Position Badge */}
+                          <span style={{
+                            position: 'absolute',
+                            bottom: '6px',
+                            left: '6px',
+                            right: '6px',
+                            background: idx === 0 ? 'rgba(11, 35, 69, 0.9)' : 'rgba(0, 0, 0, 0.75)',
+                            color: idx === 0 ? '#D4AF37' : '#ffffff',
+                            border: idx === 0 ? '1px solid #D4AF37' : '1px solid rgba(255,255,255,0.2)',
+                            borderRadius: '4px',
+                            fontSize: '0.7rem',
+                            fontWeight: 800,
+                            padding: '2px 4px',
+                            textAlign: 'center',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {idx === 0 ? '⭐ Front Cover (Main)' : `🖼️ Detail #${idx + 1}`}
+                          </span>
+
+                          <button
+                            type="button"
+                            className={styles.imageRemoveBtn}
+                            onClick={() => handleRemoveImage(idx)}
+                            title="Remove image"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Description */}
+                <div className={styles.formGroupFull}>
+                  <label className={styles.formLabel}>📝 Full Product Description *</label>
+                  <textarea
+                    className={styles.formTextarea}
+                    placeholder="Describe the product material, design quality, origin, comfort, and wearing experience..."
+                    value={prodDesc}
+                    onChange={(e) => setProdDesc(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Key Features / Highlights */}
+                <div className={styles.formGroupFull}>
+                  <label className={styles.formLabel}>✨ Key Features & Specifications</label>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      className={styles.formInput}
+                      placeholder="Add key feature (e.g. Memory foam cushioning, Rubber sole)"
+                      value={featureInput}
+                      onChange={(e) => setFeatureInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddFeature(); } }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddFeature}
+                      style={{ padding: '0 1.2rem', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      + Add Point
+                    </button>
+                  </div>
+                  <div className={styles.featuresList}>
+                    {prodFeatures.map((feat, idx) => (
+                      <div key={idx} className={styles.featureTag}>
+                        <span>• {feat}</span>
+                        <span className={styles.featureRemove} onClick={() => handleRemoveFeature(idx)}>✕</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Badges / Checkboxes */}
+                <div className={styles.formGroupFull}>
+                  <label className={styles.formLabel}>🔥 Store Badges & Promotions</label>
+                  <div className={styles.checkboxRow}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        className={styles.checkboxInput}
+                        checked={isNewArrival}
+                        onChange={(e) => setIsNewArrival(e.target.checked)}
+                      />
+                      🆕 Mark as New Arrival
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        className={styles.checkboxInput}
+                        checked={isBestSeller}
+                        onChange={(e) => setIsBestSeller(e.target.checked)}
+                      />
+                      ⭐ Mark as Best Seller
+                    </label>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        className={styles.checkboxInput}
+                        checked={isFlashSale}
+                        onChange={(e) => setIsFlashSale(e.target.checked)}
+                      />
+                      🔥 Include in Flash Sale
+                    </label>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className={styles.formGroupFull}>
+                  <button
+                    type="submit"
+                    className={styles.submitBtn}
+                    disabled={submittingProduct || uploadingImage}
+                  >
+                    {submittingProduct ? '⏳ Uploading Product to Website...' : '🚀 Publish Product to Website'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ─── 3. PRODUCTS CATALOG VIEW ───────────────────────────────────────── */}
+        {activeView === 'products' && (
+          <div className={styles.dashContent}>
+            <div className={styles.subscribersBox}>
+              <div className={styles.subscribersHeader}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.3rem' }}>👟 Store Products Catalog ({productsList.length})</h3>
+                  <p style={{ margin: '0.2rem 0 0', fontSize: '0.82rem', opacity: 0.6 }}>Manage all live products displayed on the Meer Empire website.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => setActiveView('add-product')}
+                    style={{ padding: '0.6rem 1.2rem', background: 'linear-gradient(135deg, #D4AF37 0%, #f0cf65 100%)', color: '#0B2345', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 800 }}
+                  >
+                    ➕ Upload New Product
+                  </button>
+                  <button
+                    onClick={loadAdminProducts}
+                    style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-section)', cursor: 'pointer', fontWeight: 600, color: '#fff' }}
+                  >
+                    🔄 Refresh
+                  </button>
+                </div>
+              </div>
+
+              {loadingProducts ? (
+                <p style={{ textAlign: 'center', padding: '2rem', color: 'rgba(255,255,255,0.6)' }}>Loading catalog...</p>
+              ) : productsList.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <span className={styles.emptyIcon}>👟</span>
+                  <h3>No Products Found</h3>
+                  <p>Click "Upload New Product" to add products to your online store.</p>
+                </div>
+              ) : (
+                <div className={styles.productsAdminGrid}>
+                  {productsList.map((prod) => (
+                    <div key={prod.id} className={styles.adminProductCard}>
+                      <div className={styles.adminProductImgBox}>
+                        {prod.images?.[0] ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={prod.images[0]} alt={prod.name} className={styles.adminProductImg} />
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#666' }}>No Image</div>
+                        )}
+                        {prod.badge && <span className={styles.adminProductBadge}>{prod.badge}</span>}
+                      </div>
+                      <div className={styles.adminProductInfo}>
+                        <div>
+                          <h4 className={styles.adminProductName}>{prod.name}</h4>
+                          <div className={styles.adminProductMeta}>
+                            <span style={{ textTransform: 'capitalize' }}>📂 {prod.category}</span>
+                            <span>📦 Stock: {prod.stock}</span>
+                          </div>
+                          <div className={styles.adminProductPrice}>
+                            Rs. {prod.price.toLocaleString()}
+                            {prod.oldPrice && (
+                              <span style={{ textDecoration: 'line-through', fontSize: '0.8rem', color: '#999', marginLeft: '6px' }}>
+                                Rs. {prod.oldPrice.toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          className={styles.deleteProdBtn}
+                          onClick={() => handleDeleteProduct(prod.id)}
+                        >
+                          🗑️ Delete Product
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ─── 4. CONTACT MESSAGES VIEW ───────────────────────────────────────── */}
         {activeView === 'messages' && (
           <div className={styles.dashContent}>
             {/* Header Box */}
             <div className={styles.subscribersBox}>
               <div className={styles.subscribersHeader}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--text-primary)' }}>📩 Customer Contact Inquiries ({messages.length})</h3>
-                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Messages submitted by customers from the Contact Us page & auto-sent to info.meerempire@gmail.com</p>
+                  <h3 style={{ margin: 0, fontSize: '1.4rem', color: '#ffffff' }}>📩 Customer Contact Inquiries ({messages.length})</h3>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.6)' }}>Messages submitted by customers from the Contact Us page & auto-sent to info.meerempire@gmail.com</p>
                 </div>
-                <button onClick={loadMessages} style={{ padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-section)', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <button onClick={loadMessages} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.15)', background: 'rgba(255, 255, 255, 0.06)', color: '#ffffff', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   🔄 Refresh Messages
                 </button>
               </div>
 
               {/* Message Stats */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '1.5rem', marginBottom: '2rem' }}>
-                <div style={{ background: 'var(--bg-section)', padding: '1.25rem', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Total Messages</span>
-                  <strong style={{ display: 'block', fontSize: '1.8rem', color: 'var(--text-primary)', marginTop: '0.2rem' }}>{messages.length}</strong>
+                <div style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.5)', fontWeight: 700, textTransform: 'uppercase' }}>Total Messages</span>
+                  <strong style={{ display: 'block', fontSize: '1.8rem', color: '#ffffff', marginTop: '0.2rem' }}>{messages.length}</strong>
                 </div>
-                <div style={{ background: 'rgba(239,68,68,0.06)', padding: '1.25rem', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.2)' }}>
-                  <span style={{ fontSize: '0.78rem', color: '#dc2626', fontWeight: 700, textTransform: 'uppercase' }}>Unread Inquiries</span>
-                  <strong style={{ display: 'block', fontSize: '1.8rem', color: '#dc2626', marginTop: '0.2rem' }}>{messages.filter(m => m.status === 'unread').length}</strong>
+                <div style={{ background: 'rgba(239,68,68,0.1)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(239,68,68,0.25)' }}>
+                  <span style={{ fontSize: '0.78rem', color: '#fca5a5', fontWeight: 700, textTransform: 'uppercase' }}>Unread Inquiries</span>
+                  <strong style={{ display: 'block', fontSize: '1.8rem', color: '#ef4444', marginTop: '0.2rem' }}>{messages.filter(m => m.status === 'unread').length}</strong>
                 </div>
-                <div style={{ background: 'rgba(34,197,94,0.06)', padding: '1.25rem', borderRadius: '10px', border: '1px solid rgba(34,197,94,0.2)' }}>
-                  <span style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: 700, textTransform: 'uppercase' }}>Replied Messages</span>
-                  <strong style={{ display: 'block', fontSize: '1.8rem', color: '#16a34a', marginTop: '0.2rem' }}>{messages.filter(m => m.status === 'replied').length}</strong>
+                <div style={{ background: 'rgba(34,197,94,0.1)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(34,197,94,0.25)' }}>
+                  <span style={{ fontSize: '0.78rem', color: '#86efac', fontWeight: 700, textTransform: 'uppercase' }}>Replied Messages</span>
+                  <strong style={{ display: 'block', fontSize: '1.8rem', color: '#22c55e', marginTop: '0.2rem' }}>{messages.filter(m => m.status === 'replied').length}</strong>
                 </div>
               </div>
 
               {/* Messages Grid */}
               {loadingMessages ? (
-                <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Loading contact messages...</p>
+                <p style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255, 255, 255, 0.6)' }}>Loading contact messages...</p>
               ) : messages.length === 0 ? (
                 <div className={styles.emptyState}>
                   <span className={styles.emptyIcon}>📩</span>
@@ -669,19 +1302,18 @@ export default function AdminDashboard() {
                     <div
                       key={msg._id}
                       style={{
-                        background: msg.status === 'unread' ? 'rgba(245,158,11,0.03)' : 'var(--bg-card)',
-                        border: '1px solid ' + (msg.status === 'unread' ? '#f59e0b' : 'var(--border)'),
-                        borderRadius: '12px',
+                        background: msg.status === 'unread' ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.03)',
+                        border: '1px solid ' + (msg.status === 'unread' ? '#f59e0b' : 'rgba(255,255,255,0.08)'),
+                        borderRadius: '14px',
                         padding: '1.5rem',
                         position: 'relative',
-                        transition: 'var(--transition)',
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                            <strong style={{ fontSize: '1.15rem', color: 'var(--text-primary)' }}>👤 {msg.name}</strong>
-                            <span style={{ background: '#0B2345', color: '#fff', padding: '3px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700 }}>
+                            <strong style={{ fontSize: '1.15rem', color: '#ffffff' }}>👤 {msg.name}</strong>
+                            <span style={{ background: '#0B2345', color: '#D4AF37', border: '1px solid rgba(212,175,55,0.3)', padding: '3px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700 }}>
                               {msg.subject}
                             </span>
                             <span style={{
@@ -689,13 +1321,13 @@ export default function AdminDashboard() {
                               borderRadius: '6px',
                               fontSize: '0.78rem',
                               fontWeight: 700,
-                              background: msg.status === 'unread' ? '#fee2e2' : msg.status === 'replied' ? '#dcfce7' : '#e2e8f0',
-                              color: msg.status === 'unread' ? '#dc2626' : msg.status === 'replied' ? '#15803d' : '#475569',
+                              background: msg.status === 'unread' ? 'rgba(239,68,68,0.2)' : msg.status === 'replied' ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.1)',
+                              color: msg.status === 'unread' ? '#fca5a5' : msg.status === 'replied' ? '#86efac' : 'rgba(255,255,255,0.7)',
                             }}>
                               {msg.status === 'unread' ? '⏳ Unread' : msg.status === 'replied' ? '✅ Replied' : '👁️ Read'}
                             </span>
                           </div>
-                          <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                          <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'rgba(255, 255, 255, 0.45)' }}>
                             Received on: {new Date(msg.createdAt).toLocaleString('en-PK', { timeZone: 'Asia/Karachi' })}
                           </p>
                         </div>
@@ -709,9 +1341,10 @@ export default function AdminDashboard() {
                             onClick={() => handleUpdateMessageStatus(msg._id, 'replied')}
                             style={{
                               padding: '6px 12px',
-                              borderRadius: '6px',
+                              borderRadius: '8px',
                               background: '#0B2345',
-                              color: '#fff',
+                              color: '#D4AF37',
+                              border: '1px solid rgba(212,175,55,0.3)',
                               textDecoration: 'none',
                               fontSize: '0.82rem',
                               fontWeight: 700,
@@ -730,7 +1363,7 @@ export default function AdminDashboard() {
                               onClick={() => handleUpdateMessageStatus(msg._id, 'replied')}
                               style={{
                                 padding: '6px 12px',
-                                borderRadius: '6px',
+                                borderRadius: '8px',
                                 background: '#25D366',
                                 color: '#fff',
                                 textDecoration: 'none',
@@ -747,21 +1380,21 @@ export default function AdminDashboard() {
                           {msg.status === 'unread' ? (
                             <button
                               onClick={() => handleUpdateMessageStatus(msg._id, 'read')}
-                              style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-section)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
+                              style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#ffffff', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
                             >
                               Mark Read
                             </button>
                           ) : (
                             <button
                               onClick={() => handleUpdateMessageStatus(msg._id, 'unread')}
-                              style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-section)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
+                              style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#ffffff', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
                             >
                               Mark Unread
                             </button>
                           )}
                           <button
                             onClick={() => handleDeleteMessage(msg._id)}
-                            style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.1)', color: '#dc2626', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700 }}
+                            style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.15)', color: '#fca5a5', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700 }}
                           >
                             🗑️ Delete
                           </button>
@@ -769,13 +1402,13 @@ export default function AdminDashboard() {
                       </div>
 
                       {/* Contact Info Sub-row */}
-                      <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1rem', fontSize: '0.9rem', flexWrap: 'wrap', background: 'var(--bg-section)', padding: '0.75rem 1rem', borderRadius: '8px' }}>
-                        <span>✉️ <strong>Email:</strong> <a href={`mailto:${msg.email}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>{msg.email}</a></span>
-                        <span>📞 <strong>Phone:</strong> {msg.phone ? <a href={`tel:${msg.phone}`} style={{ color: 'inherit' }}>{msg.phone}</a> : 'N/A'}</span>
+                      <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1rem', fontSize: '0.9rem', flexWrap: 'wrap', background: 'rgba(255,255,255,0.04)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', color: '#ffffff' }}>
+                        <span>✉️ <strong>Email:</strong> <a href={`mailto:${msg.email}`} style={{ color: '#D4AF37', textDecoration: 'none' }}>{msg.email}</a></span>
+                        <span>📞 <strong>Phone:</strong> {msg.phone ? <a href={`tel:${msg.phone}`} style={{ color: '#ffffff' }}>{msg.phone}</a> : 'N/A'}</span>
                       </div>
 
                       {/* Message Content */}
-                      <div style={{ background: 'var(--bg-body)', padding: '1rem 1.25rem', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                      <div style={{ background: '#061120', padding: '1.1rem 1.25rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', fontSize: '0.95rem', color: 'rgba(255,255,255,0.9)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
                         {msg.message}
                       </div>
                     </div>
@@ -786,32 +1419,32 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* ─── 3. SUBSCRIBERS VIEW ───────────────────────────────────────────── */}
+        {/* ─── 5. VIP SUBSCRIBERS VIEW ────────────────────────────────────────── */}
         {activeView === 'subscribers' && (
           <div className={styles.dashContent}>
             {/* Broadcast Offer Campaign Sender Card */}
             <div className={styles.broadcastCard}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                  <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--text-primary)' }}>📢 Broadcast Offer Email Campaign</h2>
-                  <p style={{ margin: '4px 0 0', fontSize: '0.88rem', color: 'var(--text-muted)' }}>Send special discount offers & new arrival deals directly to all VIP subscribers!</p>
+                  <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#ffffff' }}>📢 Broadcast Offer Email Campaign</h2>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.88rem', color: 'rgba(255, 255, 255, 0.6)' }}>Send special discount offers & new arrival deals directly to all VIP subscribers!</p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
                     onClick={() => handleTemplateChange('flash_sale')}
-                    style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: selectedTemplate === 'flash_sale' ? '#0B2345' : 'transparent', color: selectedTemplate === 'flash_sale' ? '#fff' : 'inherit', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                    style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.4)', background: selectedTemplate === 'flash_sale' ? '#D4AF37' : 'rgba(255,255,255,0.05)', color: selectedTemplate === 'flash_sale' ? '#0B2345' : '#ffffff', fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer' }}
                   >
                     🎁 Flash Sale
                   </button>
                   <button
                     onClick={() => handleTemplateChange('new_arrival')}
-                    style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: selectedTemplate === 'new_arrival' ? '#0B2345' : 'transparent', color: selectedTemplate === 'new_arrival' ? '#fff' : 'inherit', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                    style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.4)', background: selectedTemplate === 'new_arrival' ? '#D4AF37' : 'rgba(255,255,255,0.05)', color: selectedTemplate === 'new_arrival' ? '#0B2345' : '#ffffff', fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer' }}
                   >
                     👟 New Arrivals
                   </button>
                   <button
                     onClick={() => handleTemplateChange('custom')}
-                    style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: selectedTemplate === 'custom' ? '#0B2345' : 'transparent', color: selectedTemplate === 'custom' ? '#fff' : 'inherit', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                    style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid rgba(212,175,55,0.4)', background: selectedTemplate === 'custom' ? '#D4AF37' : 'rgba(255,255,255,0.05)', color: selectedTemplate === 'custom' ? '#0B2345' : '#ffffff', fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer' }}
                   >
                     ✍️ Custom
                   </button>
@@ -821,68 +1454,68 @@ export default function AdminDashboard() {
               <form onSubmit={handleSendBroadcast} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.4rem' }}>Email Subject Line</label>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem', color: '#ffffff' }}>Email Subject Line</label>
                     <input
                       type="text"
                       value={broadcastSubject}
                       onChange={(e) => setBroadcastSubject(e.target.value)}
                       required
                       placeholder="e.g. 🔥 Flash Sale Up to 30% OFF!"
-                      style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-section)', color: 'var(--text-primary)' }}
+                      style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.07)', color: '#ffffff' }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.4rem' }}>Coupon Code (Optional)</label>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem', color: '#ffffff' }}>Coupon Code (Optional)</label>
                     <input
                       type="text"
                       value={broadcastCoupon}
                       onChange={(e) => setBroadcastCoupon(e.target.value)}
                       placeholder="e.g. FLASH30"
-                      style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-section)', color: 'var(--text-primary)' }}
+                      style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.07)', color: '#ffffff' }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.4rem' }}>Banner Title / Heading</label>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem', color: '#ffffff' }}>Banner Title / Heading</label>
                   <input
                     type="text"
                     value={broadcastHeading}
                     onChange={(e) => setBroadcastHeading(e.target.value)}
                     placeholder="e.g. VIP SPECIAL DISCOUNT"
-                    style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-section)', color: 'var(--text-primary)' }}
+                    style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.07)', color: '#ffffff' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.4rem' }}>Offer Details & Message</label>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem', color: '#ffffff' }}>Offer Details & Message</label>
                   <textarea
                     rows={3}
                     value={broadcastMessage}
                     onChange={(e) => setBroadcastMessage(e.target.value)}
                     required
                     placeholder="Write details about the discount offer or new product line..."
-                    style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-section)', color: 'var(--text-primary)', fontFamily: 'inherit' }}
+                    style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.07)', color: '#ffffff', fontFamily: 'inherit' }}
                   />
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    Targeting <strong>{subscribers.length}</strong> active subscriber(s)
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
+                    Targeting <strong style={{ color: '#D4AF37' }}>{subscribers.length}</strong> active subscriber(s)
                   </span>
                   <button
                     type="submit"
                     disabled={sendingBroadcast || subscribers.length === 0}
                     style={{
-                      background: 'linear-gradient(135deg, #0B2345, #1a3a6e)',
-                      color: '#fff',
+                      background: 'linear-gradient(135deg, #D4AF37 0%, #f0cf65 100%)',
+                      color: '#0B2345',
                       padding: '0.85rem 2rem',
                       borderRadius: '10px',
                       border: 'none',
                       fontWeight: 800,
                       fontSize: '0.95rem',
                       cursor: 'pointer',
-                      boxShadow: '0 4px 15px rgba(11,35,69,0.3)',
+                      boxShadow: '0 4px 15px rgba(212,175,55,0.3)',
                     }}
                   >
                     {sendingBroadcast ? '🚀 Sending Offer Email...' : '📢 Send Deal Email to All Subscribers'}
@@ -890,7 +1523,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {broadcastResult && (
-                  <div style={{ padding: '0.85rem 1rem', borderRadius: '8px', background: broadcastResult.includes('✅') ? '#f0fdf4' : '#fff5f5', border: '1px solid ' + (broadcastResult.includes('✅') ? '#bbf7d0' : '#fecaca'), color: broadcastResult.includes('✅') ? '#15803d' : '#dc2626', fontWeight: 600, fontSize: '0.88rem' }}>
+                  <div style={{ padding: '0.85rem 1rem', borderRadius: '10px', background: broadcastResult.includes('✅') ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)', border: '1px solid ' + (broadcastResult.includes('✅') ? '#22c55e' : '#ef4444'), color: broadcastResult.includes('✅') ? '#4ade80' : '#fca5a5', fontWeight: 700, fontSize: '0.9rem' }}>
                     {broadcastResult}
                   </div>
                 )}
@@ -900,14 +1533,14 @@ export default function AdminDashboard() {
             {/* Subscribers Table Box */}
             <div className={styles.subscribersBox}>
               <div className={styles.subscribersHeader}>
-                <h3 style={{ margin: 0, fontSize: '1.2rem' }}>📧 VIP Newsletter Subscribers ({subscribers.length})</h3>
-                <button onClick={loadSubscribers} style={{ padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-section)', cursor: 'pointer', fontWeight: 600 }}>
+                <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#ffffff' }}>📧 VIP Newsletter Subscribers ({subscribers.length})</h3>
+                <button onClick={loadSubscribers} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: '#ffffff', cursor: 'pointer', fontWeight: 600 }}>
                   🔄 Refresh List
                 </button>
               </div>
 
               {loadingSubscribers ? (
-                <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Loading subscribers...</p>
+                <p style={{ textAlign: 'center', padding: '2rem', color: 'rgba(255,255,255,0.6)' }}>Loading subscribers...</p>
               ) : subscribers.length === 0 ? (
                 <div className={styles.emptyState}>
                   <span className={styles.emptyIcon}>✉️</span>
@@ -929,12 +1562,12 @@ export default function AdminDashboard() {
                       {subscribers.map((sub, idx) => (
                         <tr key={sub._id || idx}>
                           <td>{idx + 1}</td>
-                          <td><strong>{sub.email}</strong></td>
+                          <td><strong style={{ color: '#ffffff' }}>{sub.email}</strong></td>
                           <td>{sub.subscribedAt ? new Date(sub.subscribedAt).toLocaleString('en-PK') : 'Recent'}</td>
                           <td>
                             <button
                               onClick={() => handleDeleteSubscriber(sub.email)}
-                              style={{ padding: '4px 10px', background: 'rgba(239,68,68,0.1)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
+                              style={{ padding: '5px 12px', background: 'rgba(239,68,68,0.15)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
                             >
                               Remove
                             </button>

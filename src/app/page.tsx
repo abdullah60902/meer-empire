@@ -1,13 +1,13 @@
 'use client';
+import { useState, useEffect, useRef } from 'react';
 import Hero from '@/components/Hero/Hero';
 import Categories from '@/components/Categories/Categories';
 import Features from '@/components/Features/Features';
 import WhyChooseUs from '@/components/WhyChooseUs/WhyChooseUs';
 import Reviews from '@/components/Reviews/Reviews';
 import ProductCard from '@/components/ProductCard/ProductCard';
-import { products } from '@/data/products';
+import { fetchProductsFromDB, type ProductItem } from '@/lib/products';
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
 
 function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -48,8 +48,18 @@ function Ticker() {
 }
 
 export default function Home() {
-  const featuredProducts = products.filter((p: any) => p.isBestSeller).slice(0, 4);
-  const newArrivals = products.filter((p: any) => p.isNew).slice(0, 4);
+  const [allProducts, setAllProducts] = useState<ProductItem[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      const data = await fetchProductsFromDB();
+      setAllProducts(data);
+    }
+    load();
+  }, []);
+
+  const featuredProducts = allProducts.filter((p) => p.isBestSeller).slice(0, 4);
+  const newArrivals = allProducts.filter((p) => p.isNew).slice(0, 4);
 
   const sectionStyle = (dark = false): React.CSSProperties => ({
     padding: '7rem 0',

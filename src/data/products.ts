@@ -7,7 +7,15 @@ export const categories = [
 
 export const brands = ['Nike', 'Adidas', 'Puma', 'New Balance', 'Reebok', 'Vans', 'Converse', 'Under Armour', 'Skechers', 'Clarks'];
 
-export const sizes = ['UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11', 'UK 12'];
+export const sizes = [
+  'UK/PK 6 | US 7 | EUR 40',
+  'UK/PK 7 | US 8 | EUR 41',
+  'UK/PK 8 | US 9 | EUR 42',
+  'UK/PK 9 | US 10 | EUR 43',
+  'UK/PK 10 | US 11 | EUR 44',
+  'UK/PK 11 | US 12 | EUR 45',
+  'UK/PK 12 | US 13 | EUR 46',
+];
 
 export const colors = ['#FFFFFF', '#0B2345', '#000000', '#C0392B', '#27AE60', '#F39C12', '#8E44AD', '#D4AF37'];
 

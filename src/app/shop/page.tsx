@@ -2,7 +2,8 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ProductCard/ProductCard';
-import { products, categories, sizes, colors } from '@/data/products';
+import { categories, sizes, colors } from '@/data/products';
+import { fetchProductsFromDB, type ProductItem } from '@/lib/products';
 import styles from './Shop.module.css';
 
 function ShopContent() {
@@ -10,22 +11,31 @@ function ShopContent() {
   const initialCategory = searchParams.get('category') || 'all';
   const initialSearch = searchParams.get('search') || '';
 
-  const [filteredProducts, setFilteredProducts] = useState(products);
+  const [allProductsList, setAllProductsList] = useState<ProductItem[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<ProductItem[]>([]);
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [activeBrands, setActiveBrands] = useState<string[]>([]);
   const [activeSizes, setActiveSizes] = useState<string[]>([]);
   const [activeColors, setActiveColors] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState([0, 20000]);
+  const [priceRange, setPriceRange] = useState([0, 50000]);
   const [sort, setSort] = useState('featured');
   const [search, setSearch] = useState(initialSearch);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   useEffect(() => {
-    let result = products;
+    async function loadData() {
+      const data = await fetchProductsFromDB();
+      setAllProductsList(data);
+    }
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    let result = [...allProductsList];
 
     if (search) {
       const q = search.toLowerCase();
-      result = result.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q));
+      result = result.filter(p => p.name.toLowerCase().includes(q) || p.brand?.toLowerCase().includes(q));
     }
 
     if (activeCategory !== 'all') {
@@ -55,7 +65,7 @@ function ShopContent() {
     }
 
     setFilteredProducts([...result]);
-  }, [activeCategory, activeBrands, activeSizes, activeColors, priceRange, sort, search]);
+  }, [allProductsList, activeCategory, activeBrands, activeSizes, activeColors, priceRange, sort, search]);
 
   const toggleFilter = (list: string[], setList: (v: string[]) => void, val: string) => {
     if (list.includes(val)) setList(list.filter(v => v !== val));

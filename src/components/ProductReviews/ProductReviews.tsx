@@ -13,13 +13,13 @@ export interface UserReview {
 }
 
 interface ProductReviewsProps {
-  productId: number;
+  productId: number | string;
   productName: string;
   initialRating: number;
   initialReviewsCount: number;
 }
 
-const DEFAULT_SAMPLE_REVIEWS: Record<number, UserReview[]> = {
+const DEFAULT_SAMPLE_REVIEWS: Record<string | number, UserReview[]> = {
   1: [
     { id: '1-1', name: 'Zeeshan Ali', rating: 5, date: '02 Aug 2026', comment: 'Bohot zabardast shoes hain! Pure original quality aur delivery bhi 2 din mein ho gayi. Extremely comfortable.', verified: true },
     { id: '1-2', name: 'Hamza Khan', rating: 5, date: '28 Jul 2026', comment: 'Cushioning is amazing for daily running. Fitting exact perfect hai.', verified: true },

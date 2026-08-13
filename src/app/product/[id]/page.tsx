@@ -3,7 +3,7 @@ import { useState, use, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { products } from '@/data/products';
+import { fetchProductsFromDB, type ProductItem } from '@/lib/products';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import styles from './ProductDetail.module.css';
@@ -13,22 +13,49 @@ import ProductReviews from '@/components/ProductReviews/ProductReviews';
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const product = products.find((p) => p.id === parseInt(resolvedParams.id));
-  
-  if (!product) return notFound();
+  const productIdStr = String(resolvedParams.id);
+
+  const [product, setProduct] = useState<ProductItem | null>(null);
+  const [allProducts, setAllProducts] = useState<ProductItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [activeImage, setActiveImage] = useState(0);
-  const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || '');
-  const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || '');
+  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
   const { dispatch: cartDispatch } = useCart();
   const { isWishlisted, dispatch: wishlistDispatch } = useWishlist();
-  const wishlisted = isWishlisted(product.id);
 
-  // Scroll to top on mount
-  useEffect(() => { window.scrollTo(0, 0); }, []);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    async function load() {
+      setLoading(true);
+      const list = await fetchProductsFromDB();
+      setAllProducts(list);
+      const found = list.find((p) => String(p.id) === productIdStr);
+      if (found) {
+        setProduct(found);
+        setSelectedSize(found.sizes?.[0] || '');
+        setSelectedColor(found.colors?.[0] || '');
+      }
+      setLoading(false);
+    }
+    load();
+  }, [productIdStr]);
+
+  if (loading) {
+    return (
+      <div className="container" style={{ padding: '5rem 0', textAlign: 'center', color: 'var(--text-muted)' }}>
+        <h2>Loading Product Details...</h2>
+      </div>
+    );
+  }
+
+  if (!product) return notFound();
+
+  const wishlisted = isWishlisted(product.id);
 
   const handleAddToCart = () => {
     cartDispatch({ type: 'ADD_ITEM', payload: { ...product, size: selectedSize, color: selectedColor, quantity } });
@@ -42,7 +69,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     window.location.href = '/cart';
   };
 
-  const relatedProducts = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
+  const relatedProducts = allProducts.filter(p => p.category === product.category && String(p.id) !== String(product.id)).slice(0, 4);
 
   return (
     <div className={styles.pageWrap}>
@@ -73,7 +100,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               />
               <div className={styles.badges}>
                 {product.isNew && <span className={styles.badgeNew}>New</span>}
-                {product.discount > 0 && <span className={styles.badgeSale}>-{product.discount}%</span>}
+                {(product.discount ?? 0) > 0 && <span className={styles.badgeSale}>-{product.discount}%</span>}
               </div>
             </div>
             <div className={styles.thumbnails}>
