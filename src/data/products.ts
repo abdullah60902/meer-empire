@@ -8,6 +8,8 @@ export const categories = [
 export const brands = ['Nike', 'Adidas', 'Puma', 'New Balance', 'Reebok', 'Vans', 'Converse', 'Under Armour', 'Skechers', 'Clarks'];
 
 export const sizes = [
+  'UK/PK 5 | US 6 | EUR 38',
+  'UK/PK 5.5 | US 6.5 | EUR 39',
   'UK/PK 6 | US 7 | EUR 40',
   'UK/PK 7 | US 8 | EUR 41',
   'UK/PK 8 | US 9 | EUR 42',
