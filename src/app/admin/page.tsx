@@ -91,6 +91,7 @@ export default function AdminDashboard() {
     'UK/PK 9 | US 10 | EUR 43',
     'UK/PK 10 | US 11 | EUR 44',
   ]);
+  const [customSizeInput, setCustomSizeInput] = useState('');
   const [prodImages, setProdImages] = useState<string[]>([]);
   const [editingProductId, setEditingProductId] = useState<string | number | null>(null);
   const [imageUrlInput, setImageUrlInput] = useState('');
@@ -222,6 +223,15 @@ export default function AdminDashboard() {
     setSelectedSizes((prev) =>
       prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
     );
+  };
+
+  const handleAddCustomSize = () => {
+    const trimmed = customSizeInput.trim();
+    if (!trimmed) return;
+    if (!selectedSizes.includes(trimmed)) {
+      setSelectedSizes((prev) => [...prev, trimmed]);
+    }
+    setCustomSizeInput('');
   };
 
   const handleSetAsFrontImage = (index: number) => {
@@ -1041,21 +1051,59 @@ export default function AdminDashboard() {
 
                 {/* Available Sizes */}
                 <div className={styles.formGroupFull}>
-                  <label className={styles.formLabel}>📏 Available Sizes (UK/PK, US, EUR)</label>
+                  <label className={styles.formLabel}>📏 Available Sizes (UK/PK, US, EUR & Custom)</label>
+                  
+                  {/* Preset & Custom Size Chips */}
                   <div className={styles.chipGroup}>
-                    {defaultSizes.map((size) => {
+                    {Array.from(new Set([...defaultSizes, ...selectedSizes])).map((size) => {
                       const isActive = selectedSizes.includes(size);
+                      const isCustom = !defaultSizes.includes(size);
                       return (
                         <button
                           key={size}
                           type="button"
                           className={`${styles.chipBtn} ${isActive ? styles.chipBtnActive : ''}`}
                           onClick={() => toggleSize(size)}
+                          title={isCustom ? 'Custom Added Size' : undefined}
                         >
-                          {isActive ? '✓ ' : ''}{size}
+                          {isActive ? '✓ ' : ''}{size} {isCustom ? '🏷️' : ''}
                         </button>
                       );
                     })}
+                  </div>
+
+                  {/* Add Custom Size Field */}
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      className={styles.formInput}
+                      placeholder="➕ Type custom size (e.g. UK/PK 7.5 | US 8.5 | EUR 41.5 or 7.5)"
+                      value={customSizeInput}
+                      onChange={(e) => setCustomSizeInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddCustomSize();
+                        }
+                      }}
+                      style={{ flex: 1 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCustomSize}
+                      style={{
+                        padding: '0.6rem 1.2rem',
+                        background: 'rgba(212,175,55,0.2)',
+                        border: '1px solid #D4AF37',
+                        color: '#D4AF37',
+                        borderRadius: '10px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      + Add Custom Size
+                    </button>
                   </div>
                 </div>
 

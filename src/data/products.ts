@@ -9,13 +9,19 @@ export const brands = ['Nike', 'Adidas', 'Puma', 'New Balance', 'Reebok', 'Vans'
 
 export const sizes = [
   'UK/PK 5 | US 6 | EUR 38',
-  'UK/PK 5.5 | US 6.5 | EUR 39',
-  'UK/PK 6 | US 7 | EUR 40',
+  'UK/PK 5.5 | US 6.5 | EUR 38.5',
+  'UK/PK 6 | US 7 | EUR 39',
+  'UK/PK 6.5 | US 7.5 | EUR 40',
   'UK/PK 7 | US 8 | EUR 41',
+  'UK/PK 7.5 | US 8.5 | EUR 41.5',
   'UK/PK 8 | US 9 | EUR 42',
+  'UK/PK 8.5 | US 9.5 | EUR 42.5',
   'UK/PK 9 | US 10 | EUR 43',
+  'UK/PK 9.5 | US 10.5 | EUR 43.5',
   'UK/PK 10 | US 11 | EUR 44',
+  'UK/PK 10.5 | US 11.5 | EUR 44.5',
   'UK/PK 11 | US 12 | EUR 45',
+  'UK/PK 11.5 | US 12.5 | EUR 45.5',
   'UK/PK 12 | US 13 | EUR 46',
 ];
 
