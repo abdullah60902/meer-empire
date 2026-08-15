@@ -45,6 +45,7 @@ const PAYMENT_ACCOUNTS = {
   bank: {
     bankName:      'United Bank Limited (UBL)',
     accountNumber: '2419391495656',
+    iban:          'PK94UNIL0109000391495656',
     accountTitle:  'Muhammad Hussian',
   },
 };
@@ -359,6 +360,15 @@ export default function CartPage() {
               <strong>{PAYMENT_ACCOUNTS.bank.accountNumber}</strong>
               <button type="button" className={styles.copyBtn} onClick={() => copyToClipboard(PAYMENT_ACCOUNTS.bank.accountNumber, 'ba')}>
                 {copied === 'ba' ? '✅ Copied!' : '📋 Copy'}
+              </button>
+            </div>
+          </div>
+          <div className={styles.acRow}>
+            <span>IBAN Number</span>
+            <div className={styles.acValueRow}>
+              <strong style={{ fontSize: '0.85rem', letterSpacing: '0.5px' }}>{PAYMENT_ACCOUNTS.bank.iban}</strong>
+              <button type="button" className={styles.copyBtn} onClick={() => copyToClipboard(PAYMENT_ACCOUNTS.bank.iban, 'iban')}>
+                {copied === 'iban' ? '✅ Copied!' : '📋 Copy'}
               </button>
             </div>
           </div>
