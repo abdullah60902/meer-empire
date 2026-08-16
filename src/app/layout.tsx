@@ -8,6 +8,7 @@ import SlideCart from "@/components/Cart/SlideCart";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp/FloatingWhatsApp";
 import BackToTop from "@/components/BackToTop/BackToTop";
 import Footer from "@/components/Footer/Footer";
+import MetaPixel from "@/components/MetaPixel/MetaPixel";
 
 export const metadata: Metadata = {
   title: "MEER EMPIRE – Imported Branded Shoes | Premium Quality | Cash On Delivery",
@@ -46,6 +47,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#0B2345" />
       </head>
       <body>
+        <MetaPixel />
         <ThemeProvider>
           <CartProvider>
             <WishlistProvider>
