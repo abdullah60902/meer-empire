@@ -21,7 +21,7 @@ export default function Navbar() {
   const { itemCount, dispatch: cartDispatch } = useCart();
   const { items: wishlistItems } = useWishlist();
   const { isDark, toggleTheme } = useTheme();
-  const logoSrc = isDark ? '/img/logo-2.png' : '/img/logo.png';
+  const logoSrc = (!scrolled || isDark) ? '/img/logo-2.png' : '/img/logo.png';
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -191,6 +191,10 @@ export default function Navbar() {
               <span>{link.label}</span>
             </Link>
           ))}
+          <Link href="/wishlist" className={styles.mobileLink} onClick={() => setMobileOpen(false)}>
+            <span className={styles.mobileLinkIcon}>❤️</span>
+            <span>Wishlist {wishlistItems.length > 0 ? `(${wishlistItems.length})` : ''}</span>
+          </Link>
 
           <div className={styles.mobileDivider} />
           <div className={styles.mobileSectionTitle}>Customer Care</div>
