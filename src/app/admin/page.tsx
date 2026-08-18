@@ -57,6 +57,8 @@ export default function AdminDashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [adminNote, setAdminNote] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Subscribers state
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
@@ -112,9 +114,12 @@ export default function AdminDashboard() {
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
   const [broadcastResult, setBroadcastResult] = useState('');
 
-  const loadOrders = async () => {
+  const loadOrders = async (showRefreshing = false) => {
+    if (showRefreshing) setRefreshing(true);
     const liveOrders = await fetchOrdersFromDB();
     setOrders(liveOrders);
+    setLastUpdated(new Date());
+    if (showRefreshing) setRefreshing(false);
   };
 
   const loadSubscribers = async () => {
@@ -394,6 +399,15 @@ export default function AdminDashboard() {
       loadAdminProducts();
     }
   }, []);
+
+  // Auto-refresh orders every 30 seconds
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const interval = setInterval(() => {
+      loadOrders();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -745,6 +759,34 @@ export default function AdminDashboard() {
                   <span className={styles.statLabel}>COD</span>
                 </div>
               </div>
+            </div>
+
+            {/* Refresh Bar */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)' }}>
+                {lastUpdated ? `🕐 Last updated: ${lastUpdated.toLocaleTimeString('en-PK')}` : '🕐 Loading orders...'}
+                <span style={{ marginLeft: '0.75rem', color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem' }}>Auto-refreshes every 30s</span>
+              </span>
+              <button
+                onClick={() => loadOrders(true)}
+                disabled={refreshing}
+                style={{
+                  padding: '0.45rem 1.1rem',
+                  background: refreshing ? 'rgba(212,175,55,0.15)' : 'rgba(212,175,55,0.25)',
+                  color: '#D4AF37',
+                  border: '1px solid rgba(212,175,55,0.4)',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  cursor: refreshing ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {refreshing ? '⏳ Refreshing...' : '🔄 Refresh Orders'}
+              </button>
             </div>
 
             {/* Filter Tabs + Search */}

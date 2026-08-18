@@ -33,7 +33,8 @@ export interface Order {
 
 const STORAGE_KEY = 'meer_orders';
 
-export function saveOrder(order: Order): void {
+export async function saveOrder(order: Order): Promise<void> {
+  // Save to localStorage first (instant backup)
   try {
     const existing = getOrders();
     existing.unshift(order); // newest first
@@ -42,12 +43,20 @@ export function saveOrder(order: Order): void {
     console.error('Failed to save order in localStorage', e);
   }
 
-  // Also save to MongoDB Atlas Database
-  fetch('/api/orders', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(order),
-  }).catch((err) => console.error('Failed to save order to MongoDB:', err));
+  // Save to MongoDB Atlas Database (await so we know it saved)
+  try {
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(order),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      console.error('MongoDB save failed:', data.error);
+    }
+  } catch (err) {
+    console.error('Failed to save order to MongoDB:', err);
+  }
 }
 
 export function getOrders(): Order[] {

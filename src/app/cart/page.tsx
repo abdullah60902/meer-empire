@@ -122,14 +122,16 @@ export default function CartPage() {
 
   // Final submit
   const handlePlaceOrder = async () => {
-    if (!screenshot) {
+    // COD: screenshot optional (advance payment proof)
+    // Online: screenshot required
+    if (paymentMethod === 'online' && !screenshot) {
       alert('Please upload your payment screenshot to proceed.');
       return;
     }
 
     setIsSubmitting(true);
 
-    let uploadedScreenshot = screenshot;
+    let uploadedScreenshot: string | undefined = screenshot ?? undefined;
     if (screenshot && screenshot.startsWith('data:image')) {
       try {
         const uploadRes = await fetch('/api/upload', {
@@ -171,14 +173,17 @@ export default function CartPage() {
       total,
     };
 
-    saveOrder(order);
+    try {
+      await saveOrder(order);
+    } catch (err) {
+      console.error('Failed to save order:', err);
+    }
+
     sendEmailNotification(order);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSuccessOrder(order);
-      dispatch({ type: 'CLEAR_CART' });
-    }, 1500);
+    setIsSubmitting(false);
+    setSuccessOrder(order);
+    dispatch({ type: 'CLEAR_CART' });
   };
 
   const sendEmailNotification = async (order: Order) => {
@@ -743,9 +748,14 @@ export default function CartPage() {
                 type="button"
                 className={styles.placeOrderBtn}
                 onClick={handlePlaceOrder}
-                disabled={isSubmitting || !screenshot}
+                disabled={isSubmitting || (paymentMethod === 'online' && !screenshot)}
               >
-                {isSubmitting ? '⏳ Processing...' : screenshot ? '🛒 Place Order Now' : '📸 Upload Screenshot First'}
+                {isSubmitting
+                  ? '⏳ Processing...'
+                  : paymentMethod === 'online' && !screenshot
+                  ? '📸 Upload Screenshot First'
+                  : '🛒 Place Order Now'
+                }
               </button>
               <div className={styles.secureText}>🔒 Secure SSL Encrypted Checkout</div>
             </div>

@@ -8,27 +8,42 @@ export async function GET() {
     await connectDB();
     const orders = await OrderModel.find({}).sort({ createdAt: -1 });
 
-    const formattedOrders = orders.map((o) => ({
-      id: o.orderId,
-      customerName: o.customerName,
-      customerPhone: o.customerPhone,
-      customerEmail: o.customerEmail,
-      customerAddress: o.customerAddress,
-      customerCity: o.customerCity,
-      customerPostal: o.customerPostal,
-      paymentMethod: o.paymentMethod,
-      paymentChannel: o.paymentChannel,
-      paymentProofImage: o.paymentProofImage,
-      status: o.status,
-      adminNote: o.adminNote,
-      items: o.items,
-      subtotal: o.subtotal,
-      deliveryCharge: o.deliveryCharge,
-      discount: o.discount,
-      coupon: o.coupon,
-      total: o.total,
-      createdAt: o.createdAt.toISOString(),
-    }));
+    const formattedOrders = orders.map((o) => {
+      const plain = o.toObject ? o.toObject() : o;
+      return {
+        id: plain.orderId,
+        customerName: plain.customerName,
+        customerPhone: plain.customerPhone,
+        customerEmail: plain.customerEmail,
+        customerAddress: plain.customerAddress,
+        customerCity: plain.customerCity,
+        customerPostal: plain.customerPostal,
+        paymentMethod: plain.paymentMethod,
+        paymentChannel: plain.paymentChannel,
+        paymentProofImage: plain.paymentProofImage,
+        screenshotBase64: plain.paymentProofImage, // alias for admin dashboard
+        status: plain.status,
+        adminNote: plain.adminNote,
+        items: Array.isArray(plain.items)
+          ? plain.items.map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              brand: item.brand,
+              price: item.price,
+              quantity: item.quantity,
+              size: item.size,
+              color: item.color,
+              images: item.images || [],
+            }))
+          : [],
+        subtotal: plain.subtotal,
+        deliveryCharge: plain.deliveryCharge,
+        discount: plain.discount,
+        coupon: plain.coupon,
+        total: plain.total,
+        createdAt: plain.createdAt instanceof Date ? plain.createdAt.toISOString() : plain.createdAt,
+      };
+    });
 
     return NextResponse.json({ success: true, orders: formattedOrders });
   } catch (error: any) {
@@ -53,13 +68,13 @@ export async function POST(req: NextRequest) {
       customerPostal: body.customerPostal,
       paymentMethod: body.paymentMethod,
       paymentChannel: body.paymentChannel,
-      paymentProofImage: body.paymentProofImage,
+      paymentProofImage: body.screenshotBase64 ?? body.paymentProofImage,
       status: body.status || 'pending',
       adminNote: body.adminNote,
       items: body.items,
       subtotal: body.subtotal,
-      deliveryCharge: body.deliveryCharge || 250,
-      discount: body.discount || 0,
+      deliveryCharge: body.deliveryCharge ?? 250,
+      discount: body.discount ?? 0,
       coupon: body.coupon,
       total: body.total,
     };

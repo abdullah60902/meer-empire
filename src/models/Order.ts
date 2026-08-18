@@ -35,7 +35,7 @@ export interface IOrder extends Document {
 }
 
 const OrderItemSchema = new Schema<IOrderItem>({
-  id: { type: Number, required: true },
+  id: { type: Schema.Types.Mixed, required: true }, // accepts both string and number IDs
   name: { type: String, required: true },
   brand: { type: String, required: true },
   price: { type: Number, required: true },
@@ -53,7 +53,7 @@ const OrderSchema = new Schema<IOrder>(
     customerEmail: { type: String, required: true },
     customerAddress: { type: String, required: true },
     customerCity: { type: String, required: true },
-    customerPostal: { type: String, required: true },
+    customerPostal: { type: String, default: '' },
     paymentMethod: { type: String, enum: ['online', 'cod'], required: true },
     paymentChannel: { type: String },
     paymentProofImage: { type: String },
